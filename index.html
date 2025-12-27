@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Laporan SO Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+<style>
+:root{
+  --primary:#1e88e5;
+  --success:#43a047;
+  --warning:#fb8c00;
+  --danger:#e53935;
+  --dark:#263238;
+}
+body{
+  margin:0;
+  font-family:Segoe UI,Arial;
+  background:#eef2f6;
+}
+.card{
+  background:#fff;
+  border-radius:8px;
+  box-shadow:0 4px 12px rgba(0,0,0,.1);
+  padding:20px;
+}
+.login{
+  max-width:360px;
+  margin:120px auto;
+}
+.dashboard{
+  max-width:1100px;
+  margin:20px auto;
+}
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.header h2{margin:0;color:var(--dark)}
+.badge{
+  padding:6px 10px;
+  border-radius:4px;
+  background:#000;
+  color:#0f0;
+  font-size:13px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:10px;
+  margin-top:15px;
+}
+button,input{
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+button{
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+}
+.primary{background:var(--primary)}
+.success{background:var(--success)}
+.warning{background:var(--warning)}
+.danger{background:var(--danger)}
+.dark{background:var(--dark)}
+iframe{
+  width:100%;
+  height:75vh;
+  border-radius:6px;
+  border:1px solid #ccc;
+  margin-top:15px;
+}
+.footer{
+  margin-top:10px;
+  text-align:right;
+}
+</style>
+</head>
+
+<body>
+<div id="root"></div>
+
+<script>
+/* =========================
+   ANTI INSPECT
+========================= */
+document.addEventListener("contextmenu",e=>e.preventDefault());
+document.onkeydown=e=>{
+ if(e.keyCode===123 || (e.ctrlKey&&e.shiftKey&&["I","J","C"].includes(e.key)) || (e.ctrlKey&&e.key==="U")){
+   e.preventDefault(); alert("Akses dibatasi");
+ }
+};
+setInterval(()=>{
+ if(window.outerWidth-window.innerWidth>160||window.outerHeight-window.innerHeight>160){
+   document.body.innerHTML="<h2 style='text-align:center;margin-top:40px'>AKSES DIBLOKIR</h2>";
+ }
+},1200);
+
+const {useState,useEffect}=React;
+
+/* =========================
+   DATE HELPER
+========================= */
+const formatDate=d=>{
+ return String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
+};
+const today=()=>formatDate(new Date());
+
+/* =========================
+   USER HARDCODE (DARI JSON)
+========================= */
+const USERS = [
+ {u:"ROFIQOTUL", s:"1GAI", e:"2026-01-08"},
+ {u:"RISANDI", s:"1Y3H", e:"2026-01-08"},
+ {u:"RAYI", s:"1Y2U", e:"2026-01-08"},
+ {u:"GILANG", s:"1GAI", e:"2026-01-08"},
+ {u:"CLAUDIO", s:"1Y3H", e:"2026-01-08"},
+ {u:"FAHRIZAL", s:"1GX8", e:"2026-01-08"},
+ {u:"IKBAL", s:"N706", e:"2026-01-08"},
+ {u:"AHOYPUKI", s:"N291", e:"2026-01-08"},
+ {u:"ANNDRW", s:"O071", e:"2026-01-08"},
+ {u:"ROFIQ", s:"M687", e:"2026-02-07"},
+ {u:"DIKIPUKI", s:"N732", e:"2026-01-09"},
+ {u:"IBNU BARKAH", s:"XB78", e:"2026-01-10"},
+ {u:"RESTU", s:"UF19", e:"2026-01-11"},
+ {u:"SRIBHAWONO", s:"1VC6", e:"2026-01-11"},
+ {u:"PUGUNG RAHARJO", s:"L059", e:"2026-01-11"},
+ {u:"19104915", s:"L277", e:"2026-01-16"},
+ {u:"17093778", s:"N606", e:"2026-01-17"},
+ {u:"ROHIM", s:"M604", e:"2026-01-17"},
+ {u:"NOFARIS", s:"1PL8", e:"2026-01-19"},
+ {u:"PELINDUNG JAYA", s:"L143", e:"2026-01-21"},
+ {u:"IBNU GANTENG", s:"XB18", e:"2026-01-22"},
+ {u:"RIDWAN 2597", s:"XB65", e:"2026-01-22"},
+ {u:"ADMIN", s:"UD66", e:"2026-01-23"},
+ {u:"ADMINN", s:"UD67", e:"2025-12-26"},
+ {u:"CICANGKANG", s:"BJ09", e:"2026-01-24"}
+];
+
+function App(){
+ const[user,setUser]=useState(null);
+ const[username,setUsername]=useState("");
+ const[date,setDate]=useState("");
+ const[src,setSrc]=useState("");
+ const[countdown,setCountdown]=useState("");
+
+ /* =========================
+    COUNTDOWN + AUTO LOGOUT
+ ========================= */
+ useEffect(()=>{
+  if(!user) return;
+  const timer=setInterval(()=>{
+   const end=new Date(user.e+"T23:59:59");
+   const diff=end-new Date();
+   if(diff<=0){
+    alert("MASA AKTIF HABIS");
+    setUser(null);
+    clearInterval(timer);
+   }else{
+    const d=Math.floor(diff/86400000);
+    const h=Math.floor(diff%86400000/3600000);
+    const m=Math.floor(diff%3600000/60000);
+    const s=Math.floor(diff%60000/1000);
+    setCountdown(`${d} hari ${h} jam ${m} menit ${s} detik`);
+   }
+  },1000);
+  return()=>clearInterval(timer);
+ },[user]);
+
+ const login=()=>{
+  const u=USERS.find(x=>x.u===username.toUpperCase());
+  if(!u) return alert("USER TIDAK TERDAFTAR");
+  if(new Date()>new Date(u.e+"T23:59:59")) return alert("AKUN EXPIRED");
+  setUser(u);
+ };
+
+ const load=t=>{
+  let d=date;
+  if(t==="last") d=today();
+  if(!d && t!=="last") return alert("Pilih tanggal");
+  const url={
+   last:`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.s}&dateSo=${d}`,
+   all:`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_all_so_absolute_desc?storeId=${user.s}&dateSo=${d}`,
+   plu:`https://app.alfastore.co.id/prd/api/rpt/laporan/laporan_plu_tak_main_toko?storeId=${user.s}&dateTx=${d}`,
+   dgs:`https://app.alfastore.co.id/prd/api/rpt/laporan/rpt_plu_discontinue?storeId=${user.s}&dateSo=${d}&filter_tag=All`,
+   gab:`https://app.alfastore.co.id/prd/api/rpt/laporan/rep_gabungan_23_24?storeId=${user.s}&periode1=${d}`
+  };
+  setSrc(url[t]+"&t="+Date.now());
+ };
+
+ const refresh=()=>{
+  if(src) setSrc(src.split("&t=")[0]+"&t="+Date.now());
+ };
+
+ if(!user){
+  return React.createElement("div",{className:"login card"},
+   React.createElement("h2",null,"Login Dashboard"),
+   React.createElement("input",{placeholder:"USERNAME",onChange:e=>setUsername(e.target.value)}),
+   React.createElement("button",{className:"primary",onClick:login},"LOGIN")
+  );
+ }
+
+ return React.createElement("div",{className:"dashboard card"},
+  React.createElement("div",{className:"header"},
+   React.createElement("h2",null,"Dashboard Laporan"),
+   React.createElement("div",{className:"badge"},countdown)
+  ),
+  React.createElement("p",null,"User: ",user.u," | Toko: ",user.s),
+  React.createElement("input",{type:"date",onChange:e=>setDate(formatDate(new Date(e.target.value)))}),
+
+  React.createElement("div",{className:"grid"},
+   React.createElement("button",{className:"primary",onClick:()=>load("last")},"SO Terakhir"),
+   React.createElement("button",{className:"success",onClick:()=>load("all")},"SO Adjust"),
+   React.createElement("button",{className:"warning",onClick:()=>load("plu")},"PLU Tidak Main"),
+   React.createElement("button",{className:"dark",onClick:()=>load("dgs")},"Tag DGS"),
+   React.createElement("button",{className:"danger",onClick:()=>load("gab")},"Gabungan"),
+   React.createElement("button",{className:"primary",onClick:refresh},"Refresh")
+  ),
+
+  src && React.createElement("iframe",{src}),
+
+  React.createElement("div",{className:"footer"},
+   React.createElement("button",{className:"danger",onClick:()=>setUser(null)},"Logout")
+  )
+ );
+}
+
+ReactDOM.createRoot(document.getElementById("root"))
+.render(React.createElement(App));
+</script>
+</body>
+</html>
