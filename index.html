@@ -95,6 +95,15 @@ iframe{
   margin-top:10px;
   text-align:right;
 }
+.date-range{
+  display:flex;
+  gap:10px;
+  margin:10px 0;
+}
+.login-footer{
+  margin-top:15px;
+  text-align:center;
+}
 </style>
 </head>
 
@@ -141,22 +150,6 @@ const USERS = [
  {u:"AHOYPUKI", s:"N291", e:"2026-01-08"},
  {u:"ANNDRW", s:"O071", e:"2026-01-08"},
  {u:"ROFIQ", s:"M687", e:"2026-02-07"},
- {u:"DIKIPUKI", s:"N732", e:"2026-01-09"},
- {u:"IBNU BARKAH", s:"XB78", e:"2026-01-10"},
- {u:"RESTU", s:"UF19", e:"2026-01-11"},
- {u:"SRIBHAWONO", s:"1VC6", e:"2026-01-11"},
- {u:"PUGUNG RAHARJO", s:"L059", e:"2026-01-11"},
- {u:"19104915", s:"L277", e:"2026-01-16"},
- {u:"17093778", s:"N606", e:"2026-01-17"},
- {u:"ROHIM", s:"M604", e:"2026-01-17"},
- {u:"NOFARIS", s:"1PL8", e:"2026-01-19"},
- {u:"PELINDUNG JAYA", s:"L143", e:"2026-01-21"},
- {u:"IBNU GANTENG", s:"XB18", e:"2026-01-22"},
- {u:"RIDWAN 2597", s:"XB65", e:"2026-01-22"},
- {u:"JONNNI", s:"UD66", e:"2026-01-23"},
- {u:"BALI INDAH", s:"L093", e:"2026-01-26"},
- {u:"CICANGKANG", s:"BJ09", e:"2026-01-24"},
- {u:"USER", s:"BJ08", e:"2026-01-24"},
  {u:"DAINUR", s:"M2N3", e:"2025-12-28"}
 ];
 
@@ -164,6 +157,8 @@ function App(){
  const[user,setUser]=useState(null);
  const[username,setUsername]=useState("");
  const[date,setDate]=useState("");
+ const[startDate,setStartDate]=useState("");
+ const[endDate,setEndDate]=useState("");
  const[src,setSrc]=useState("");
  const[countdown,setCountdown]=useState("");
 
@@ -197,13 +192,19 @@ function App(){
  const load=t=>{
   let d=date;
   if(t==="last") d=today();
-  if(!d && t!=="last") return alert("Pilih tanggal");
+  if(!d && ["last","daily"].indexOf(t)===-1) return alert("Pilih tanggal");
+
+  if(t==="daily" && (!startDate || !endDate)){
+    return alert("Pilih tanggal awal dan akhir laporan");
+  }
+
   const url={
    last:`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.s}&dateSo=${d}`,
    all:`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_all_so_absolute_desc?storeId=${user.s}&dateSo=${d}`,
    plu:`https://app.alfastore.co.id/prd/api/rpt/laporan/laporan_plu_tak_main_toko?storeId=${user.s}&dateTx=${d}`,
    dgs:`https://app.alfastore.co.id/prd/api/rpt/laporan/rpt_plu_discontinue?storeId=${user.s}&dateSo=${d}&filter_tag=All`,
-   gab:`https://app.alfastore.co.id/prd/api/rpt/laporan/rep_gabungan_23_24?storeId=${user.s}&periode1=${d}`
+   gab:`https://app.alfastore.co.id/prd/api/rpt/laporan/rep_gabungan_23_24?storeId=${user.s}&periode1=${d}`,
+   daily:`https://app.alfastore.co.id/prd/api/rpt/laporan/daily_performance?storeId=${user.s}&periode1=${startDate}&periode2=${endDate}`
   };
   setSrc(url[t]+"&t="+Date.now());
  };
@@ -216,7 +217,16 @@ function App(){
   return React.createElement("div",{className:"login card"},
    React.createElement("h2",null,"Login Dashboard"),
    React.createElement("input",{placeholder:"USERNAME",onChange:e=>setUsername(e.target.value)}),
-   React.createElement("button",{className:"primary",onClick:login},"LOGIN")
+   React.createElement("button",{className:"primary",onClick:login},"LOGIN"),
+   React.createElement("div",{className:"login-footer"},
+    React.createElement("button",{
+      className:"success",
+      onClick:()=>window.open(
+        "https://wa.me/6287775798491?text=Halo%20Admin,%20saya%20ingin%20bantuan%20akses%20dashboard",
+        "_blank"
+      )
+    },"📞 Hubungi Admin")
+   )
   );
  }
 
@@ -230,7 +240,13 @@ function App(){
    "📢 UNTUK LAYANAN HITUNG SETORAN TUNAI ATAU KLEREK HUBUNGI ADMIN"
   ),
   React.createElement("p",null,"User: ",user.u," | Toko: ",user.s),
+
   React.createElement("input",{type:"date",onChange:e=>setDate(formatDate(new Date(e.target.value)))}),
+
+  React.createElement("div",{className:"date-range"},
+   React.createElement("input",{type:"date",onChange:e=>setStartDate(formatDate(new Date(e.target.value)))}),
+   React.createElement("input",{type:"date",onChange:e=>setEndDate(formatDate(new Date(e.target.value)))})
+  ),
 
   React.createElement("div",{className:"grid"},
    React.createElement("button",{className:"primary",onClick:()=>load("last")},"SO Terakhir"),
@@ -238,6 +254,7 @@ function App(){
    React.createElement("button",{className:"warning",onClick:()=>load("plu")},"PLU Tidak Main"),
    React.createElement("button",{className:"dark",onClick:()=>load("dgs")},"Tag DGS"),
    React.createElement("button",{className:"danger",onClick:()=>load("gab")},"Gabungan"),
+   React.createElement("button",{className:"success",onClick:()=>load("daily")},"Daily Performance"),
    React.createElement("button",{className:"primary",onClick:refresh},"Refresh")
   ),
 
