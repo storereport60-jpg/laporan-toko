@@ -10,100 +10,23 @@
 
 <style>
 :root{
-  --primary:#1e88e5;
-  --success:#43a047;
-  --warning:#fb8c00;
-  --danger:#e53935;
-  --dark:#263238;
+ --primary:#1e88e5;--success:#43a047;--warning:#fb8c00;--danger:#e53935;--dark:#263238;
 }
-body{
-  margin:0;
-  font-family:Segoe UI,Arial;
-  background:#eef2f6;
-}
-.card{
-  background:#fff;
-  border-radius:8px;
-  box-shadow:0 4px 12px rgba(0,0,0,.1);
-  padding:20px;
-}
-.login{
-  max-width:360px;
-  margin:120px auto;
-}
-.dashboard{
-  max-width:1100px;
-  margin:20px auto;
-}
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.header h2{margin:0;color:var(--dark)}
-.badge{
-  padding:6px 10px;
-  border-radius:4px;
-  background:#000;
-  color:#0f0;
-  font-size:13px;
-}
-.welcome{
-  margin:8px 0;
-  font-weight:600;
-  color:var(--primary);
-}
-.announcement{
-  margin:10px 0;
-  padding:10px;
-  border-radius:6px;
-  background:#fff3cd;
-  color:#856404;
-  font-size:14px;
-  border:1px solid #ffeeba;
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:10px;
-  margin-top:15px;
-}
-button,input{
-  padding:10px;
-  border-radius:6px;
-  border:1px solid #ccc;
-}
-button{
-  color:#fff;
-  border:none;
-  cursor:pointer;
-  font-weight:600;
-}
-.primary{background:var(--primary)}
-.success{background:var(--success)}
-.warning{background:var(--warning)}
-.danger{background:var(--danger)}
+body{margin:0;font-family:Segoe UI,Arial;background:#eef2f6}
+.card{background:#fff;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);padding:20px}
+.login{max-width:360px;margin:120px auto}
+.dashboard{max-width:1100px;margin:20px auto}
+.header{display:flex;justify-content:space-between;align-items:center}
+.badge{padding:6px 10px;border-radius:4px;background:#000;color:#0f0;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:15px}
+button,input{padding:10px;border-radius:6px;border:1px solid #ccc}
+button{color:#fff;border:none;cursor:pointer;font-weight:600}
+.primary{background:var(--primary)} .success{background:var(--success)}
+.warning{background:var(--warning)} .danger{background:var(--danger)}
 .dark{background:var(--dark)}
-iframe{
-  width:100%;
-  height:75vh;
-  border-radius:6px;
-  border:1px solid #ccc;
-  margin-top:15px;
-}
-.footer{
-  margin-top:10px;
-  text-align:right;
-}
-.date-range{
-  display:flex;
-  gap:10px;
-  margin:10px 0;
-}
-.login-footer{
-  margin-top:15px;
-  text-align:center;
-}
+iframe{width:100%;height:75vh;border-radius:6px;border:1px solid #ccc;margin-top:15px}
+.date-box{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap}
+.login-footer{text-align:center;margin-top:15px}
 </style>
 </head>
 
@@ -111,75 +34,72 @@ iframe{
 <div id="root"></div>
 
 <script>
-/* =========================
-   ANTI INSPECT
-========================= */
+/* SECURITY */
 document.addEventListener("contextmenu",e=>e.preventDefault());
 document.onkeydown=e=>{
- if(e.keyCode===123 || (e.ctrlKey&&e.shiftKey&&["I","J","C"].includes(e.key)) || (e.ctrlKey&&e.key==="U")){
-   e.preventDefault(); alert("Akses dibatasi");
+ if(e.keyCode===123||(e.ctrlKey&&e.shiftKey&&["I","J","C"].includes(e.key))||(e.ctrlKey&&e.key==="U")){
+  e.preventDefault();alert("Akses dibatasi");
  }
 };
-setInterval(()=>{
- if(window.outerWidth-window.innerWidth>160||window.outerHeight-window.innerHeight>160){
-   document.body.innerHTML="<h2 style='text-align:center;margin-top:40px'>AKSES DIBLOKIR</h2>";
- }
-},1200);
 
 const {useState,useEffect}=React;
-
-/* =========================
-   DATE HELPER
-========================= */
-const formatDate=d=>{
- return String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
-};
+const formatDate=d=>String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
 const today=()=>formatDate(new Date());
 
-/* =========================
-   USER HARDCODE
-========================= */
-const USERS = [
- {u:"ROFIQOTUL", s:"1GAI", e:"2026-01-08"},
- {u:"RISANDI", s:"1Y3H", e:"2026-01-08"},
- {u:"RAYI", s:"1Y2U", e:"2026-01-08"},
- {u:"GILANG", s:"1GAI", e:"2026-01-08"},
- {u:"CLAUDIO", s:"1Y3H", e:"2026-01-08"},
- {u:"FAHRIZAL", s:"1GX8", e:"2026-01-08"},
- {u:"IKBAL", s:"N706", e:"2026-01-08"},
- {u:"AHOYPUKI", s:"N291", e:"2026-01-08"},
- {u:"ANNDRW", s:"O071", e:"2026-01-08"},
- {u:"ROFIQ", s:"M687", e:"2026-02-07"},
- {u:"DAINUR", s:"M2N3", e:"2025-12-28"}
+/* ================= USER FULL (AMAN) ================= */
+const USERS=[
+ {u:"ROFIQOTUL",s:"1GAI",e:"2026-01-08"},
+ {u:"RISANDI",s:"1Y3H",e:"2026-01-08"},
+ {u:"RAYI",s:"1Y2U",e:"2026-01-08"},
+ {u:"GILANG",s:"1GAI",e:"2026-01-08"},
+ {u:"CLAUDIO",s:"1Y3H",e:"2026-01-08"},
+ {u:"FAHRIZAL",s:"1GX8",e:"2026-01-08"},
+ {u:"IKBAL",s:"N706",e:"2026-01-08"},
+ {u:"AHOYPUKI",s:"N291",e:"2026-01-08"},
+ {u:"ANNDRW",s:"O071",e:"2026-01-08"},
+ {u:"ROFIQ",s:"M687",e:"2026-02-07"},
+ {u:"DIKIPUKI",s:"N732",e:"2026-01-09"},
+ {u:"IBNU BARKAH",s:"XB78",e:"2026-01-10"},
+ {u:"RESTU",s:"UF19",e:"2026-01-11"},
+ {u:"SRIBHAWONO",s:"1VC6",e:"2026-01-11"},
+ {u:"PUGUNG RAHARJO",s:"L059",e:"2026-01-11"},
+ {u:"19104915",s:"L277",e:"2026-01-16"},
+ {u:"17093778",s:"N606",e:"2026-01-17"},
+ {u:"ROHIM",s:"M604",e:"2026-01-17"},
+ {u:"NOFARIS",s:"1PL8",e:"2026-01-19"},
+ {u:"PELINDUNG JAYA",s:"L143",e:"2026-01-21"},
+ {u:"IBNU GANTENG",s:"XB18",e:"2026-01-22"},
+ {u:"RIDWAN 2597",s:"XB65",e:"2026-01-22"},
+ {u:"JONNNI",s:"UD66",e:"2026-01-23"},
+ {u:"BALI INDAH",s:"L093",e:"2026-01-26"},
+ {u:"CICANGKANG",s:"BJ09",e:"2026-01-24"},
+ {u:"USER",s:"BJ08",e:"2026-01-24"},
+ {u:"DAINUR",s:"M2N3",e:"2025-12-28"}
 ];
 
 function App(){
  const[user,setUser]=useState(null);
  const[username,setUsername]=useState("");
+ const[active,setActive]=useState("");
  const[date,setDate]=useState("");
- const[startDate,setStartDate]=useState("");
- const[endDate,setEndDate]=useState("");
+ const[start,setStart]=useState("");
+ const[end,setEnd]=useState("");
  const[src,setSrc]=useState("");
  const[countdown,setCountdown]=useState("");
 
  useEffect(()=>{
   if(!user) return;
-  const timer=setInterval(()=>{
-   const end=new Date(user.e+"T23:59:59");
-   const diff=end-new Date();
-   if(diff<=0){
-    alert("MASA AKTIF HABIS");
-    setUser(null);
-    clearInterval(timer);
-   }else{
+  const t=setInterval(()=>{
+   const diff=new Date(user.e+"T23:59:59")-new Date();
+   if(diff<=0){alert("MASA AKTIF HABIS");setUser(null);}
+   else{
     const d=Math.floor(diff/86400000);
     const h=Math.floor(diff%86400000/3600000);
     const m=Math.floor(diff%3600000/60000);
-    const s=Math.floor(diff%60000/1000);
-    setCountdown(`${d} hari ${h} jam ${m} menit ${s} detik`);
+    setCountdown(`${d} hari ${h} jam ${m} menit`);
    }
   },1000);
-  return()=>clearInterval(timer);
+  return()=>clearInterval(t);
  },[user]);
 
  const login=()=>{
@@ -189,28 +109,19 @@ function App(){
   setUser(u);
  };
 
- const load=t=>{
-  let d=date;
-  if(t==="last") d=today();
-  if(!d && ["last","daily"].indexOf(t)===-1) return alert("Pilih tanggal");
-
-  if(t==="daily" && (!startDate || !endDate)){
-    return alert("Pilih tanggal awal dan akhir laporan");
-  }
+ const load=()=>{
+  if(active!=="daily"&&!date) return alert("Pilih tanggal");
+  if(active==="daily"&&(!start||!end)) return alert("Pilih tanggal awal & akhir");
 
   const url={
-   last:`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.s}&dateSo=${d}`,
-   all:`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_all_so_absolute_desc?storeId=${user.s}&dateSo=${d}`,
-   plu:`https://app.alfastore.co.id/prd/api/rpt/laporan/laporan_plu_tak_main_toko?storeId=${user.s}&dateTx=${d}`,
-   dgs:`https://app.alfastore.co.id/prd/api/rpt/laporan/rpt_plu_discontinue?storeId=${user.s}&dateSo=${d}&filter_tag=All`,
-   gab:`https://app.alfastore.co.id/prd/api/rpt/laporan/rep_gabungan_23_24?storeId=${user.s}&periode1=${d}`,
-   daily:`https://app.alfastore.co.id/prd/api/rpt/laporan/daily_performance?storeId=${user.s}&periode1=${startDate}&periode2=${endDate}`
+   last:`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.s}&dateSo=${today()}`,
+   all:`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_all_so_absolute_desc?storeId=${user.s}&dateSo=${date}`,
+   plu:`https://app.alfastore.co.id/prd/api/rpt/laporan/laporan_plu_tak_main_toko?storeId=${user.s}&dateTx=${date}`,
+   dgs:`https://app.alfastore.co.id/prd/api/rpt/laporan/rpt_plu_discontinue?storeId=${user.s}&dateSo=${date}&filter_tag=All`,
+   gab:`https://app.alfastore.co.id/prd/api/rpt/laporan/rep_gabungan_23_24?storeId=${user.s}&periode1=${date}`,
+   daily:`https://app.alfastore.co.id/prd/api/rpt/laporan/daily_performance?storeId=${user.s}&periode1=${start}&periode2=${end}`
   };
-  setSrc(url[t]+"&t="+Date.now());
- };
-
- const refresh=()=>{
-  if(src) setSrc(src.split("&t=")[0]+"&t="+Date.now());
+  setSrc(url[active]+"&t="+Date.now());
  };
 
  if(!user){
@@ -219,13 +130,7 @@ function App(){
    React.createElement("input",{placeholder:"USERNAME",onChange:e=>setUsername(e.target.value)}),
    React.createElement("button",{className:"primary",onClick:login},"LOGIN"),
    React.createElement("div",{className:"login-footer"},
-    React.createElement("button",{
-      className:"success",
-      onClick:()=>window.open(
-        "https://wa.me/6287775798491?text=Halo%20Admin,%20saya%20ingin%20bantuan%20akses%20dashboard",
-        "_blank"
-      )
-    },"📞 Hubungi Admin")
+    React.createElement("button",{className:"success",onClick:()=>window.open("https://wa.me/6287775798491","_blank")},"📞 Hubungi Admin")
    )
   );
  }
@@ -235,34 +140,25 @@ function App(){
    React.createElement("h2",null,"Dashboard Laporan"),
    React.createElement("div",{className:"badge"},countdown)
   ),
-  React.createElement("div",{className:"welcome"},"Selamat Datang, ",user.u),
-  React.createElement("div",{className:"announcement"},
-   "📢 UNTUK LAYANAN HITUNG SETORAN TUNAI ATAU KLEREK HUBUNGI ADMIN"
-  ),
-  React.createElement("p",null,"User: ",user.u," | Toko: ",user.s),
-
-  React.createElement("input",{type:"date",onChange:e=>setDate(formatDate(new Date(e.target.value)))}),
-
-  React.createElement("div",{className:"date-range"},
-   React.createElement("input",{type:"date",onChange:e=>setStartDate(formatDate(new Date(e.target.value)))}),
-   React.createElement("input",{type:"date",onChange:e=>setEndDate(formatDate(new Date(e.target.value)))})
-  ),
 
   React.createElement("div",{className:"grid"},
-   React.createElement("button",{className:"primary",onClick:()=>load("last")},"SO Terakhir"),
-   React.createElement("button",{className:"success",onClick:()=>load("all")},"SO Adjust"),
-   React.createElement("button",{className:"warning",onClick:()=>load("plu")},"PLU Tidak Main"),
-   React.createElement("button",{className:"dark",onClick:()=>load("dgs")},"Tag DGS"),
-   React.createElement("button",{className:"danger",onClick:()=>load("gab")},"Gabungan"),
-   React.createElement("button",{className:"success",onClick:()=>load("daily")},"Daily Performance"),
-   React.createElement("button",{className:"primary",onClick:refresh},"Refresh")
+   React.createElement("button",{className:"primary",onClick:()=>setActive("last")},"SO Terakhir"),
+   React.createElement("button",{className:"success",onClick:()=>setActive("all")},"SO Adjust"),
+   React.createElement("button",{className:"warning",onClick:()=>setActive("plu")},"PLU Tidak Main"),
+   React.createElement("button",{className:"dark",onClick:()=>setActive("dgs")},"Tag DGS"),
+   React.createElement("button",{className:"danger",onClick:()=>setActive("gab")},"Gabungan"),
+   React.createElement("button",{className:"success",onClick:()=>setActive("daily")},"Daily Performance")
+  ),
+
+  active && React.createElement("div",{className:"date-box"},
+   active!=="daily" && React.createElement("input",{type:"date",onChange:e=>setDate(formatDate(new Date(e.target.value)))}),
+   active==="daily" && React.createElement("input",{type:"date",onChange:e=>setStart(formatDate(new Date(e.target.value)))}),
+   active==="daily" && React.createElement("input",{type:"date",onChange:e=>setEnd(formatDate(new Date(e.target.value)))}),
+   React.createElement("button",{className:"primary",onClick:load},"Tampilkan Laporan")
   ),
 
   src && React.createElement("iframe",{src}),
-
-  React.createElement("div",{className:"footer"},
-   React.createElement("button",{className:"danger",onClick:()=>setUser(null)},"Logout")
-  )
+  React.createElement("button",{className:"danger",onClick:()=>setUser(null)},"Logout")
  );
 }
 
