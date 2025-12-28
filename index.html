@@ -12,21 +12,25 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#eef2f6}
-.card{background:#fff;border-radius:8px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
-.login{max-width:360px;margin:120px auto}
-.dashboard{max-width:1150px;margin:20px auto}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
-button,input{padding:10px;border-radius:6px;border:1px solid #ccc}
-button{color:#fff;border:none;cursor:pointer;font-weight:600}
+body{margin:0;font-family:"Segoe UI",Arial;background:#f4f6fb;color:#333}
+.container{max-width:1200px;margin:25px auto;padding:0 15px}
+.card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.login{max-width:380px;margin:120px auto}
+.header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h2,h3{margin:0}
+.badge{background:#e8f1ff;color:#1e88e5;padding:6px 12px;border-radius:20px;font-size:13px}
+.notice{background:#fff8e1;border-left:5px solid #ffb300;padding:12px;border-radius:6px;margin:15px 0}
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:15px}
+button,input{padding:10px 12px;border-radius:8px;border:1px solid #ccc;font-size:14px}
+button{border:none;color:#fff;font-weight:600;cursor:pointer}
 .primary{background:#1e88e5}
 .success{background:#43a047}
 .warning{background:#fb8c00}
 .danger{background:#e53935}
-iframe{width:100%;height:75vh;margin-top:15px;border-radius:6px;border:none}
-.header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.notice{background:#fff3cd;padding:10px;border-radius:6px;margin-bottom:10px}
-.badge{background:#e3f2fd;padding:6px 10px;border-radius:20px;font-size:13px}
+.secondary{background:#546e7a}
+.actions{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap}
+iframe{width:100%;height:78vh;margin-top:18px;border-radius:10px;border:none;background:#fff}
+.footer{margin-top:15px;font-size:13px;color:#666}
 </style>
 </head>
 
@@ -34,6 +38,7 @@ iframe{width:100%;height:75vh;margin-top:15px;border-radius:6px;border:none}
 <div id="root"></div>
 
 <script>
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
   authDomain: "server-laporan.firebaseapp.com",
@@ -42,12 +47,13 @@ firebase.initializeApp({
 });
 const rtdb = firebase.database();
 
+/* ================= UTIL ================= */
 const {useState} = React;
-
 const fmt = d =>
   String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
 const today = () => fmt(new Date());
 
+/* ================= APP ================= */
 function App(){
   const[user,setUser]=useState(null);
   const[username,setUsername]=useState("");
@@ -57,6 +63,7 @@ function App(){
   const[end,setEnd]=useState("");
   const[src,setSrc]=useState("");
 
+  /* ===== LOGIN ===== */
   const login = async ()=>{
     const snap = await rtdb.ref("userList").once("value");
     let found=null;
@@ -65,27 +72,30 @@ function App(){
     });
     if(!found) return alert("User tidak terdaftar");
     if(new Date(found.expired)<new Date()) return alert("Akun expired");
-
     setUser(found);
   };
 
-  const resetView = (m)=>{
+  const changeMenu = m=>{
     setMenu(m);
     setSrc("");
     setDate(""); setStart(""); setEnd("");
   };
 
+  /* ===== LOAD LAPORAN ===== */
   const load = ()=>{
     let url="";
     if(menu==="last"){
-      if(!date) return alert("Pilih tanggal");
-      url=`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.storeId}&dateSo=${date}`;
+      url=`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.storeId}&dateSo=${today()}`;
     }
     if(menu==="notmain"){
       url=`https://app.alfastore.co.id/prd/api/rpt/laporan/laporan_plu_tak_main_toko?storeId=${user.storeId}&dateTx=${today()}`;
     }
     if(menu==="disc"){
       url=`https://app.alfastore.co.id/prd/api/rpt/laporan/rpt_plu_discontinue?storeId=${user.storeId}&dateSo=${today()}&filter_tag=All`;
+    }
+    if(menu==="adjust"){
+      if(!date) return alert("Pilih tanggal");
+      url=`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_all_so_absolute_desc?storeId=${user.storeId}&dateSo=${date}`;
     }
     if(menu==="daily"){
       if(!start||!end) return alert("Pilih tanggal awal & akhir");
@@ -94,49 +104,61 @@ function App(){
     setSrc(url+"&t="+Date.now());
   };
 
+  /* ===== LOGIN PAGE ===== */
   if(!user){
     return React.createElement("div",{className:"login card"},
-      React.createElement("h2",null,"Login"),
+      React.createElement("h2",null,"Login User"),
       React.createElement("input",{placeholder:"Username",onChange:e=>setUsername(e.target.value)}),
       React.createElement("button",{className:"primary",onClick:login},"LOGIN"),
-      React.createElement("button",{className:"success",style:{marginTop:10},
+      React.createElement("button",{className:"secondary",style:{marginTop:10},
         onClick:()=>window.open("https://wa.me/6287775798491","_blank")
       },"Hubungi Admin")
     );
   }
 
-  return React.createElement("div",{className:"dashboard"},
+  /* ===== DASHBOARD ===== */
+  return React.createElement("div",{className:"container"},
     React.createElement("div",{className:"card"},
       React.createElement("div",{className:"header"},
         React.createElement("h3",null,`Selamat Datang, ${user.username}`),
         React.createElement("span",{className:"badge"},`Masa Aktif: ${user.expired}`),
         React.createElement("button",{className:"danger",onClick:()=>{setUser(null);setSrc("");}},"Logout")
       ),
+
       React.createElement("div",{className:"notice"},
-        "📢 Pengumuman: Gunakan data laporan dengan bijak. Hubungi admin jika ada kendala."
+        "📢 Pengumuman: Data laporan bersifat internal. Pastikan memilih tanggal dengan benar."
       ),
 
-      React.createElement("div",{className:"grid"},
-        React.createElement("button",{className:"primary",onClick:()=>resetView("last")},"Selisih Terakhir"),
-        React.createElement("button",{className:"success",onClick:()=>resetView("notmain")},"PLU Tidak Main"),
-        React.createElement("button",{className:"warning",onClick:()=>resetView("disc")},"Discontinue"),
-        React.createElement("button",{className:"danger",onClick:()=>resetView("daily")},"Daily Performance")
+      React.createElement("div",{className:"menu"},
+        React.createElement("button",{className:"primary",onClick:()=>changeMenu("last")},"Selisih Terakhir"),
+        React.createElement("button",{className:"success",onClick:()=>changeMenu("notmain")},"PLU Tidak Main"),
+        React.createElement("button",{className:"warning",onClick:()=>changeMenu("disc")},"Discontinue"),
+        React.createElement("button",{className:"secondary",onClick:()=>changeMenu("adjust")},"SO Sudah Adjust"),
+        React.createElement("button",{className:"danger",onClick:()=>changeMenu("daily")},"Daily Performance")
       ),
 
-      menu==="last" &&
-        React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+      menu==="adjust" &&
+        React.createElement("div",{className:"actions"},
+          React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+        ),
 
       menu==="daily" &&
-        React.createElement("div",null,
+        React.createElement("div",{className:"actions"},
           React.createElement("input",{type:"date",onChange:e=>setStart(fmt(new Date(e.target.value)))}),
-          React.createElement("input",{type:"date",onChange:e=>setEnd(fmt(new Date(e.target.value)))})
+          React.createElement("input",{type:"date",onChange:e=>setEnd(fmt(new Date(e.target.value)))}),
         ),
 
       menu &&
-        React.createElement("button",{className:"primary",style:{marginTop:10},onClick:load},"Tampilkan")
+        React.createElement("div",{className:"actions"},
+          React.createElement("button",{className:"primary",onClick:load},"Tampilkan Laporan")
+        )
     ),
 
-    src && React.createElement("iframe",{src})
+    src && React.createElement("iframe",{src}),
+
+    React.createElement("div",{className:"footer"},
+      "© ",new Date().getFullYear()," Dashboard Laporan Toko"
+    )
   );
 }
 
