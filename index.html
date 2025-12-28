@@ -2,145 +2,145 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel - User Manager</title>
+<title>Dashboard Laporan Toko</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <style>
-body{font-family:Arial;background:#eef2f6;margin:0}
+body{margin:0;font-family:Arial;background:#eef2f6}
 .card{background:#fff;border-radius:8px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
-.container{max-width:1100px;margin:30px auto}
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left}
-th{background:#f5f5f5}
-input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
-button{cursor:pointer;border:none;color:#fff;font-weight:600}
+.login{max-width:360px;margin:120px auto}
+.dashboard{max-width:1150px;margin:20px auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+button,input{padding:10px;border-radius:6px;border:1px solid #ccc}
+button{color:#fff;border:none;cursor:pointer;font-weight:600}
 .primary{background:#1e88e5}
 .success{background:#43a047}
 .warning{background:#fb8c00}
 .danger{background:#e53935}
-.hidden{display:none}
+iframe{width:100%;height:75vh;margin-top:15px;border-radius:6px;border:none}
+.header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.notice{background:#fff3cd;padding:10px;border-radius:6px;margin-bottom:10px}
+.badge{background:#e3f2fd;padding:6px 10px;border-radius:20px;font-size:13px}
 </style>
 </head>
 
 <body>
-
-<div class="container">
-  <!-- LOGIN ADMIN -->
-  <div id="login" class="card">
-    <h2>🔐 Admin Login</h2>
-    <input id="pin" type="password" placeholder="Masukkan PIN Admin">
-    <button class="primary" onclick="loginAdmin()">LOGIN</button>
-  </div>
-
-  <!-- PANEL -->
-  <div id="panel" class="card hidden">
-    <h2>🧑‍💼 Admin Panel</h2>
-
-    <h3>➕ Tambah User</h3>
-    <input id="u" placeholder="Username">
-    <input id="s" placeholder="Store ID">
-    <input id="e" type="date">
-    <button class="success" onclick="addUser()">Tambah</button>
-
-    <h3 style="margin-top:20px">📋 Daftar User</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Username</th>
-          <th>Store</th>
-          <th>Expired</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="list"></tbody>
-    </table>
-
-    <button class="danger" style="margin-top:15px" onclick="logout()">Logout</button>
-  </div>
-</div>
+<div id="root"></div>
 
 <script>
-/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
   authDomain: "server-laporan.firebaseapp.com",
   databaseURL: "https://server-laporan-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "server-laporan"
 });
-const db = firebase.database();
+const rtdb = firebase.database();
 
-/* ================= CONFIG ================= */
-const ADMIN_PIN = "261261"; // 🔴 GANTI PIN INI
+const {useState} = React;
 
-/* ================= LOGIN ================= */
-function loginAdmin(){
-  if(document.getElementById("pin").value !== ADMIN_PIN){
-    alert("PIN salah"); return;
-  }
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("panel").classList.remove("hidden");
-  loadUsers();
-}
+const fmt = d =>
+  String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
+const today = () => fmt(new Date());
 
-/* ================= USER CRUD ================= */
-function loadUsers(){
-  db.ref("userList").on("value",snap=>{
-    const data = snap.val() || {};
-    const tbody = document.getElementById("list");
-    tbody.innerHTML="";
-    Object.keys(data).forEach(id=>{
-      const u = data[id];
-      tbody.innerHTML += `
-        <tr>
-          <td>${u.username}</td>
-          <td>${u.storeId}</td>
-          <td>${u.expired}</td>
-          <td>
-            <button class="warning" onclick="editUser('${id}')">Edit</button>
-            <button class="danger" onclick="delUser('${id}')">Hapus</button>
-          </td>
-        </tr>`;
+function App(){
+  const[user,setUser]=useState(null);
+  const[username,setUsername]=useState("");
+  const[menu,setMenu]=useState("");
+  const[date,setDate]=useState("");
+  const[start,setStart]=useState("");
+  const[end,setEnd]=useState("");
+  const[src,setSrc]=useState("");
+
+  const login = async ()=>{
+    const snap = await rtdb.ref("userList").once("value");
+    let found=null;
+    Object.values(snap.val()||{}).forEach(u=>{
+      if(u.username?.toUpperCase()===username.toUpperCase()) found=u;
     });
-  });
+    if(!found) return alert("User tidak terdaftar");
+    if(new Date(found.expired)<new Date()) return alert("Akun expired");
+
+    setUser(found);
+  };
+
+  const resetView = (m)=>{
+    setMenu(m);
+    setSrc("");
+    setDate(""); setStart(""); setEnd("");
+  };
+
+  const load = ()=>{
+    let url="";
+    if(menu==="last"){
+      if(!date) return alert("Pilih tanggal");
+      url=`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.storeId}&dateSo=${date}`;
+    }
+    if(menu==="notmain"){
+      url=`https://app.alfastore.co.id/prd/api/rpt/laporan/laporan_plu_tak_main_toko?storeId=${user.storeId}&dateTx=${today()}`;
+    }
+    if(menu==="disc"){
+      url=`https://app.alfastore.co.id/prd/api/rpt/laporan/rpt_plu_discontinue?storeId=${user.storeId}&dateSo=${today()}&filter_tag=All`;
+    }
+    if(menu==="daily"){
+      if(!start||!end) return alert("Pilih tanggal awal & akhir");
+      url=`https://app.alfastore.co.id/prd/api/rpt/laporan/daily_performance?storeId=${user.storeId}&periode1=${start}&periode2=${end}`;
+    }
+    setSrc(url+"&t="+Date.now());
+  };
+
+  if(!user){
+    return React.createElement("div",{className:"login card"},
+      React.createElement("h2",null,"Login"),
+      React.createElement("input",{placeholder:"Username",onChange:e=>setUsername(e.target.value)}),
+      React.createElement("button",{className:"primary",onClick:login},"LOGIN"),
+      React.createElement("button",{className:"success",style:{marginTop:10},
+        onClick:()=>window.open("https://wa.me/6287775798491","_blank")
+      },"Hubungi Admin")
+    );
+  }
+
+  return React.createElement("div",{className:"dashboard"},
+    React.createElement("div",{className:"card"},
+      React.createElement("div",{className:"header"},
+        React.createElement("h3",null,`Selamat Datang, ${user.username}`),
+        React.createElement("span",{className:"badge"},`Masa Aktif: ${user.expired}`),
+        React.createElement("button",{className:"danger",onClick:()=>{setUser(null);setSrc("");}},"Logout")
+      ),
+      React.createElement("div",{className:"notice"},
+        "📢 Pengumuman: Gunakan data laporan dengan bijak. Hubungi admin jika ada kendala."
+      ),
+
+      React.createElement("div",{className:"grid"},
+        React.createElement("button",{className:"primary",onClick:()=>resetView("last")},"Selisih Terakhir"),
+        React.createElement("button",{className:"success",onClick:()=>resetView("notmain")},"PLU Tidak Main"),
+        React.createElement("button",{className:"warning",onClick:()=>resetView("disc")},"Discontinue"),
+        React.createElement("button",{className:"danger",onClick:()=>resetView("daily")},"Daily Performance")
+      ),
+
+      menu==="last" &&
+        React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+
+      menu==="daily" &&
+        React.createElement("div",null,
+          React.createElement("input",{type:"date",onChange:e=>setStart(fmt(new Date(e.target.value)))}),
+          React.createElement("input",{type:"date",onChange:e=>setEnd(fmt(new Date(e.target.value)))})
+        ),
+
+      menu &&
+        React.createElement("button",{className:"primary",style:{marginTop:10},onClick:load},"Tampilkan")
+    ),
+
+    src && React.createElement("iframe",{src})
+  );
 }
 
-function addUser(){
-  const u=document.getElementById("u").value;
-  const s=document.getElementById("s").value;
-  const e=document.getElementById("e").value;
-  if(!u||!s||!e) return alert("Lengkapi data");
-
-  db.ref("userList").push({
-    username:u,
-    storeId:s,
-    expired:e
-  });
-
-  document.getElementById("u").value="";
-  document.getElementById("s").value="";
-  document.getElementById("e").value="";
-}
-
-function delUser(id){
-  if(confirm("Hapus user ini?"))
-    db.ref("userList/"+id).remove();
-}
-
-function editUser(id){
-  const u=prompt("Username baru:");
-  const s=prompt("Store ID baru:");
-  const e=prompt("Expired (YYYY-MM-DD):");
-  if(u&&s&&e)
-    db.ref("userList/"+id).set({username:u,storeId:s,expired:e});
-}
-
-function logout(){
-  location.reload();
-}
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
 </script>
-
 </body>
 </html>
