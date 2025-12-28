@@ -9,10 +9,9 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
-<!-- Firebase COMPAT (WAJIB untuk HTML langsung) -->
+<!-- Firebase COMPAT -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <style>
 body{margin:0;font-family:Arial;background:#eef2f6}
@@ -22,9 +21,12 @@ body{margin:0;font-family:Arial;background:#eef2f6}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
 button,input{padding:10px;border-radius:6px;border:1px solid #ccc}
 button{color:#fff;border:none;cursor:pointer;font-weight:600}
-.primary{background:#1e88e5}.success{background:#43a047}
-.warning{background:#fb8c00}.danger{background:#e53935}
-iframe{width:100%;height:75vh;margin-top:15px;border-radius:6px}
+.primary{background:#1e88e5}
+.success{background:#43a047}
+.warning{background:#fb8c00}
+.danger{background:#e53935}
+iframe{width:100%;height:75vh;margin-top:15px;border-radius:6px;border:none}
+.header{display:flex;justify-content:space-between;align-items:center}
 </style>
 </head>
 
@@ -34,91 +36,125 @@ iframe{width:100%;height:75vh;margin-top:15px;border-radius:6px}
 <script>
 /* ================= FIREBASE INIT ================= */
 firebase.initializeApp({
- apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
- authDomain: "server-laporan.firebaseapp.com",
- projectId: "server-laporan"
+  apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
+  authDomain: "server-laporan.firebaseapp.com",
+  databaseURL: "https://server-laporan-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "server-laporan"
 });
-const auth = firebase.auth();
-const db = firebase.firestore();
+const rtdb = firebase.database();
+
+/* ================= UTIL ================= */
+const {useState} = React;
+
+const formatDate = d =>
+  String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
+
+const today = () => formatDate(new Date());
 
 /* ================= APP ================= */
-const {useState,useEffect}=React;
-const formatDate=d=>String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
-const today=()=>formatDate(new Date());
-
 function App(){
- const[user,setUser]=useState(null);
- const[email,setEmail]=useState("");
- const[password,setPassword]=useState("");
- const[active,setActive]=useState("");
- const[date,setDate]=useState("");
- const[start,setStart]=useState("");
- const[end,setEnd]=useState("");
- const[src,setSrc]=useState("");
+  const[user,setUser]=useState(null);
+  const[username,setUsername]=useState("");
+  const[active,setActive]=useState("");
+  const[date,setDate]=useState("");
+  const[start,setStart]=useState("");
+  const[end,setEnd]=useState("");
+  const[src,setSrc]=useState("");
 
- const login=async()=>{
-  try{
-   const res=await auth.signInWithEmailAndPassword(email,password);
-   const doc=await db.collection("users").doc(res.user.uid).get();
-   if(!doc.exists) return alert("Data user tidak ditemukan");
+  /* ===== LOGIN (RTDB) ===== */
+  const login = async ()=>{
+    if(!username) return alert("Masukkan username");
 
-   const data=doc.data();
-   if(!data.active) return alert("Akun nonaktif");
+    const snap = await rtdb.ref("userList").once("value");
+    const data = snap.val();
+    if(!data) return alert("Database kosong");
 
-   setUser({
-    u:data.username,
-    s:data.storeId,
-    e:data.expired
-   });
-  }catch(e){
-   alert("Login gagal");
-  }
- };
+    let found = null;
+    Object.values(data).forEach(u=>{
+      if(u.username && u.username.toUpperCase() === username.toUpperCase()){
+        found = u;
+      }
+    });
 
- const load=()=>{
-  if(active!=="daily"&&!date) return alert("Pilih tanggal");
-  if(active==="daily"&&(!start||!end)) return alert("Pilih tanggal awal & akhir");
+    if(!found) return alert("User tidak terdaftar");
 
-  const url={
-   last:`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.s}&dateSo=${today()}`,
-   all:`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_all_so_absolute_desc?storeId=${user.s}&dateSo=${date}`,
-   plu:`https://app.alfastore.co.id/prd/api/rpt/laporan/laporan_plu_tak_main_toko?storeId=${user.s}&dateTx=${date}`,
-   dgs:`https://app.alfastore.co.id/prd/api/rpt/laporan/rpt_plu_discontinue?storeId=${user.s}&dateSo=${date}&filter_tag=All`,
-   gab:`https://app.alfastore.co.id/prd/api/rpt/laporan/rep_gabungan_23_24?storeId=${user.s}&periode1=${date}`,
-   daily:`https://app.alfastore.co.id/prd/api/rpt/laporan/daily_performance?storeId=${user.s}&periode1=${start}&periode2=${end}`
+    if(found.expired && new Date(found.expired) < new Date()){
+      return alert("Akun sudah expired");
+    }
+
+    setUser({
+      u: found.username,
+      s: found.storeId,
+      e: found.expired
+    });
   };
-  setSrc(url[active]+"&t="+Date.now());
- };
 
- if(!user){
-  return React.createElement("div",{className:"login card"},
-   React.createElement("h2",null,"Login"),
-   React.createElement("input",{placeholder:"Email",onChange:e=>setEmail(e.target.value)}),
-   React.createElement("input",{type:"password",placeholder:"Password",onChange:e=>setPassword(e.target.value)}),
-   React.createElement("button",{className:"primary",onClick:login},"LOGIN")
+  /* ===== LOAD LAPORAN ===== */
+  const load = ()=>{
+    if(active==="daily" && (!start || !end))
+      return alert("Pilih tanggal awal & akhir");
+
+    if(active!=="daily" && !date)
+      return alert("Pilih tanggal");
+
+    const url={
+      last:`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.s}&dateSo=${today()}`,
+      all:`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_all_so_absolute_desc?storeId=${user.s}&dateSo=${date}`,
+      plu:`https://app.alfastore.co.id/prd/api/rpt/laporan/laporan_plu_tak_main_toko?storeId=${user.s}&dateTx=${date}`,
+      dgs:`https://app.alfastore.co.id/prd/api/rpt/laporan/rpt_plu_discontinue?storeId=${user.s}&dateSo=${date}&filter_tag=All`,
+      gab:`https://app.alfastore.co.id/prd/api/rpt/laporan/rep_gabungan_23_24?storeId=${user.s}&periode1=${date}`,
+      daily:`https://app.alfastore.co.id/prd/api/rpt/laporan/daily_performance?storeId=${user.s}&periode1=${start}&periode2=${end}`
+    };
+
+    setSrc(url[active] + "&t=" + Date.now());
+  };
+
+  /* ===== LOGIN PAGE ===== */
+  if(!user){
+    return React.createElement("div",{className:"login card"},
+      React.createElement("h2",null,"Login User"),
+      React.createElement("input",{
+        placeholder:"Username",
+        onChange:e=>setUsername(e.target.value)
+      }),
+      React.createElement("button",{className:"primary",onClick:login},"LOGIN"),
+      React.createElement("button",{
+        className:"success",
+        style:{marginTop:10},
+        onClick:()=>window.open("https://wa.me/6287775798491","_blank")
+      },"Hubungi Admin")
+    );
+  }
+
+  /* ===== DASHBOARD ===== */
+  return React.createElement("div",{className:"dashboard card"},
+    React.createElement("div",{className:"header"},
+      React.createElement("h3",null,`User: ${user.u} | Toko: ${user.s}`),
+      React.createElement("button",{className:"danger",onClick:()=>{setUser(null);setSrc("");}},"Logout")
+    ),
+
+    React.createElement("div",{className:"grid"},
+      React.createElement("button",{className:"primary",onClick:()=>setActive("last")},"SO Terakhir"),
+      React.createElement("button",{className:"success",onClick:()=>setActive("all")},"SO Adjust"),
+      React.createElement("button",{className:"warning",onClick:()=>setActive("plu")},"PLU Tidak Main"),
+      React.createElement("button",{className:"danger",onClick:()=>setActive("daily")},"Daily Performance")
+    ),
+
+    active && React.createElement("div",{style:{marginTop:10}},
+      active!=="daily" &&
+        React.createElement("input",{type:"date",onChange:e=>setDate(formatDate(new Date(e.target.value)))}),
+
+      active==="daily" &&
+        React.createElement("input",{type:"date",onChange:e=>setStart(formatDate(new Date(e.target.value)))}),
+
+      active==="daily" &&
+        React.createElement("input",{type:"date",onChange:e=>setEnd(formatDate(new Date(e.target.value)))}),
+
+      React.createElement("button",{className:"primary",style:{marginLeft:10},onClick:load},"Tampilkan")
+    ),
+
+    src && React.createElement("iframe",{src})
   );
- }
-
- return React.createElement("div",{className:"dashboard card"},
-  React.createElement("h3",null,"Welcome ",user.u," | Toko ",user.s),
-
-  React.createElement("div",{className:"grid"},
-   React.createElement("button",{className:"primary",onClick:()=>setActive("last")},"SO Terakhir"),
-   React.createElement("button",{className:"success",onClick:()=>setActive("all")},"SO Adjust"),
-   React.createElement("button",{className:"warning",onClick:()=>setActive("plu")},"PLU Tidak Main"),
-   React.createElement("button",{className:"danger",onClick:()=>setActive("daily")},"Daily Performance")
-  ),
-
-  active && React.createElement("div",null,
-   active!=="daily" && React.createElement("input",{type:"date",onChange:e=>setDate(formatDate(new Date(e.target.value)))}),
-   active==="daily" && React.createElement("input",{type:"date",onChange:e=>setStart(formatDate(new Date(e.target.value)))}),
-   active==="daily" && React.createElement("input",{type:"date",onChange:e=>setEnd(formatDate(new Date(e.target.value)))}),
-   React.createElement("button",{className:"primary",onClick:load},"Tampilkan")
-  ),
-
-  src && React.createElement("iframe",{src}),
-  React.createElement("button",{className:"danger",onClick:()=>auth.signOut().then(()=>setUser(null))},"Logout")
- );
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
