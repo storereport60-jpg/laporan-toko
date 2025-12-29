@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel - User Manager</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<style>
+body{font-family:Arial;background:#eef2f6;margin:0}
+.card{background:#fff;border-radius:8px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.container{max-width:1200px;margin:30px auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left;font-size:14px}
+th{background:#f5f5f5}
+input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
+button{cursor:pointer;border:none;color:#fff;font-weight:600}
+.primary{background:#1e88e5}
+.success{background:#43a047}
+.warning{background:#fb8c00}
+.danger{background:#e53935}
+.secondary{background:#546e7a}
+.hidden{display:none}
+.small{font-size:12px;color:#666}
+.flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.badge{background:#e8f1ff;color:#1e88e5;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600}
+.welcome{
+  background:#f1f8ff;
+  border-left:5px solid #1e88e5;
+  padding:12px 15px;
+  border-radius:6px;
+  margin:15px 0;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- LOGIN ADMIN -->
+  <div id="login" class="card">
+    <h2>🔐 Admin Login</h2>
+    <input id="pin" type="password" placeholder="Masukkan PIN Admin">
+    <button class="primary" onclick="loginAdmin()">LOGIN</button>
+  </div>
+
+  <!-- PANEL -->
+  <div id="panel" class="card hidden">
+    <h2>🧑‍💼 Admin Panel</h2>
+
+    <!-- WELCOME -->
+    <div class="welcome">
+      👋 <strong>Selamat datang Pak Imron</strong><br>
+      Semoga hari Anda menyenangkan dan seluruh pekerjaan berjalan lancar.
+    </div>
+
+    <!-- ADD USER -->
+    <h3>➕ Tambah User</h3>
+    <div class="flex">
+      <input id="u" placeholder="Username">
+      <input id="s" placeholder="Store ID">
+      <input id="e" type="date">
+      <button class="success" onclick="addUser()">Tambah</button>
+    </div>
+
+    <!-- SEARCH + TOTAL -->
+    <div class="flex" style="margin-top:25px">
+      <input id="search" placeholder="🔎 Cari username / store ID" oninput="renderTable()">
+      <span class="badge">👥 Total User: <span id="total">0</span></span>
+    </div>
+
+    <!-- TABLE -->
+    <table style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Store</th>
+          <th>Expired</th>
+          <th>Device</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+
+    <button class="danger" style="margin-top:15px" onclick="logout()">Logout</button>
+  </div>
+
+</div>
+
+<script>
+/* ================= FIREBASE ================= */
+firebase.initializeApp({
+  apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
+  authDomain: "server-laporan.firebaseapp.com",
+  databaseURL: "https://server-laporan-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "server-laporan"
+});
+const db = firebase.database();
+
+/* ================= CONFIG ================= */
+const ADMIN_PIN = "500000"; // 🔴 GANTI PIN
+let USERS = {};
+
+/* ================= LOGIN ================= */
+function loginAdmin(){
+  if(document.getElementById("pin").value !== ADMIN_PIN){
+    alert("PIN salah"); return;
+  }
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("panel").classList.remove("hidden");
+  loadUsers();
+}
+
+/* ================= LOAD USERS ================= */
+function loadUsers(){
+  db.ref("userList").on("value",snap=>{
+    USERS = snap.val() || {};
+    document.getElementById("total").innerText = Object.keys(USERS).length;
+    renderTable();
+  });
+}
+
+/* ================= RENDER TABLE ================= */
+function renderTable(){
+  const q = document.getElementById("search").value.toLowerCase();
+  const tbody = document.getElementById("list");
+  tbody.innerHTML="";
+
+  Object.keys(USERS).forEach(id=>{
+    const u = USERS[id];
+    if(
+      q &&
+      !u.username.toLowerCase().includes(q) &&
+      !u.storeId.toLowerCase().includes(q)
+    ) return;
+
+    const locked = u.deviceId ? "🔒 Terkunci" : "🟢 Bebas";
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${u.username}</td>
+        <td>${u.storeId}</td>
+        <td>${u.expired}</td>
+        <td>
+          ${locked}
+          ${u.lastLogin ? `<div class="small">Last: ${new Date(u.lastLogin).toLocaleString()}</div>` : ""}
+        </td>
+        <td>
+          <button class="warning" onclick="editUser('${id}')">Edit</button>
+          <button class="secondary" onclick="resetDevice('${id}','${u.username}')">Reset Device</button>
+          <button class="danger" onclick="delUser('${id}')">Hapus</button>
+        </td>
+      </tr>`;
+  });
+}
+
+/* ================= CRUD ================= */
+function addUser(){
+  const u=document.getElementById("u").value;
+  const s=document.getElementById("s").value;
+  const e=document.getElementById("e").value;
+  if(!u||!s||!e) return alert("Lengkapi data");
+
+  db.ref("userList").push({ username:u, storeId:s, expired:e });
+
+  document.getElementById("u").value="";
+  document.getElementById("s").value="";
+  document.getElementById("e").value="";
+}
+
+function delUser(id){
+  if(confirm("Hapus user ini?"))
+    db.ref("userList/"+id).remove();
+}
+
+function editUser(id){
+  const u=prompt("Username baru:");
+  const s=prompt("Store ID baru:");
+  const e=prompt("Expired (YYYY-MM-DD):");
+  if(u&&s&&e)
+    db.ref("userList/"+id).update({ username:u, storeId:s, expired:e });
+}
+
+/* ================= RESET DEVICE ================= */
+function resetDevice(id,username){
+  if(!confirm(`Reset device untuk ${username}?`)) return;
+  db.ref("userList/"+id).update({ deviceId:null, lastLogin:null });
+  alert("✅ Device berhasil di-reset");
+}
+
+/* ================= LOGOUT ================= */
+function logout(){
+  location.reload();
+}
+</script>
+
+</body>
+</html>
