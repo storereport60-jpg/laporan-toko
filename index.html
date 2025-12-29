@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Sistem Laporan Toko</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<style>
+body{margin:0;font-family:"Segoe UI",Arial;background:#f4f6fb;color:#333}
+.container{max-width:1200px;margin:25px auto;padding:0 15px}
+.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 8px 22px rgba(0,0,0,.08)}
+.login{max-width:380px;margin:120px auto}
+.header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h2,h3{margin:0}
+.badge{background:#e8f1ff;color:#1e88e5;padding:6px 12px;border-radius:20px;font-size:13px}
+.notice{background:#fff8e1;border-left:5px solid #ffb300;padding:12px;border-radius:6px;margin:15px 0}
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:15px}
+button,input{padding:10px 12px;border-radius:8px;border:1px solid #ccc;font-size:14px}
+button{border:none;color:#fff;font-weight:600;cursor:pointer}
+.primary{background:#1e88e5}
+.success{background:#43a047}
+.warning{background:#fb8c00}
+.danger{background:#e53935}
+.secondary{background:#546e7a}
+.refresh{background:#26a69a}
+.actions{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap}
+.iframe-box{position:relative;margin-top:18px}
+iframe{width:100%;height:78vh;border-radius:12px;border:none;background:#fff}
+.loading{
+  position:absolute; inset:0;
+  background:rgba(255,255,255,.85);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; font-weight:600; color:#1e88e5;
+  z-index:10;
+}
+.footer{margin-top:15px;font-size:13px;color:#666;text-align:center}
+a{text-decoration:none}
+</style>
+</head>
+
+<body>
+<div id="root"></div>
+
+<script>
+/* ================= FIREBASE ================= */
+firebase.initializeApp({
+  apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
+  authDomain: "server-laporan.firebaseapp.com",
+  databaseURL: "https://server-laporan-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "server-laporan"
+});
+const rtdb = firebase.database();
+
+/* ================= DEVICE LOCK ================= */
+function getDeviceId(){
+  let id = localStorage.getItem("device_id");
+  if(!id){
+    id = "dev-" + crypto.randomUUID();
+    localStorage.setItem("device_id", id);
+  }
+  return id;
+}
+
+/* ================= UTIL ================= */
+const {useState} = React;
+
+const fmt = d =>
+  String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
+
+const today = () => fmt(new Date());
+
+const nowText = () => {
+  const hari=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  const bulan=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const d=new Date();
+  return `Hari ${hari[d.getDay()]}, ${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
+};
+
+/* ================= APP ================= */
+function App(){
+  const[user,setUser]=useState(null);
+  const[username,setUsername]=useState("");
+  const[menu,setMenu]=useState("");
+  const[date,setDate]=useState("");
+  const[start,setStart]=useState("");
+  const[end,setEnd]=useState("");
+  const[src,setSrc]=useState("");
+  const[loading,setLoading]=useState(false);
+
+  /* ===== LOGIN ===== */
+  const login = async ()=>{
+    const snap = await rtdb.ref("userList").once("value");
+    let foundKey=null, found=null;
+
+    Object.entries(snap.val()||{}).forEach(([k,u])=>{
+      if(u.username?.toUpperCase()===username.toUpperCase()){
+        found=u; foundKey=k;
+      }
+    });
+
+    if(!found) return alert("User tidak terdaftar");
+    if(new Date(found.expired) < new Date())
+      return alert("Akun expired");
+
+    const devId = getDeviceId();
+    if(found.deviceId && found.deviceId !== devId)
+      return alert("Akun sudah login di device lain");
+
+    if(!found.deviceId)
+      await rtdb.ref("userList/"+foundKey).update({
+        deviceId:devId,
+        lastLogin:new Date().toISOString()
+      });
+
+    setUser(found);
+  };
+
+  /* ===== AUTO REPORT ===== */
+  const openAuto = m =>{
+    setMenu(m); setDate(""); setStart(""); setEnd("");
+    let url="";
+    if(m==="last")
+      url=`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.storeId}&dateSo=${today()}`;
+    if(m==="notmain")
+      url=`https://app.alfastore.co.id/prd/api/rpt/laporan/laporan_plu_tak_main_toko?storeId=${user.storeId}&dateTx=${today()}`;
+    if(m==="disc")
+      url=`https://app.alfastore.co.id/prd/api/rpt/laporan/rpt_plu_discontinue?storeId=${user.storeId}&dateSo=${today()}&filter_tag=All`;
+    setLoading(true);
+    setSrc(url+"&t="+Date.now());
+  };
+
+  /* ===== MANUAL REPORT ===== */
+  const loadManual = ()=>{
+    let url="";
+    if(menu==="adjust"){
+      if(!date) return alert("Pilih tanggal");
+      url=`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_all_so_absolute_desc?storeId=${user.storeId}&dateSo=${date}`;
+    }
+    if(menu==="daily"){
+      if(!start||!end) return alert("Pilih periode");
+      url=`https://app.alfastore.co.id/prd/api/rpt/laporan/daily_performance?storeId=${user.storeId}&periode1=${start}&periode2=${end}`;
+    }
+    setLoading(true);
+    setSrc(url+"&t="+Date.now());
+  };
+
+  /* ===== LOGIN UI ===== */
+  if(!user){
+    return React.createElement("div",{className:"login card"},
+      React.createElement("h2",null,"Login User"),
+      React.createElement("input",{placeholder:"Username",onChange:e=>setUsername(e.target.value)}),
+      React.createElement("button",{className:"primary",onClick:login},"LOGIN"),
+      React.createElement("div",{style:{marginTop:12,textAlign:"center"}},
+        React.createElement("a",{href:"admin.html",style:{color:"#1e88e5",fontWeight:600}},
+          "🔐 Login Admin"
+        )
+      )
+    );
+  }
+
+  /* ===== DASHBOARD ===== */
+  return React.createElement("div",{className:"container"},
+    React.createElement("div",{className:"card"},
+      React.createElement("div",{className:"header"},
+        React.createElement("h3",null,`Selamat Datang, ${user.username}`),
+        React.createElement("span",{className:"badge"},`Expired: ${user.expired}`),
+        React.createElement("button",{className:"danger",onClick:()=>{setUser(null);setSrc("");}},"Logout")
+      ),
+
+      React.createElement("div",{className:"notice"},
+        React.createElement("div",null,"👋 "+nowText()),
+        React.createElement("div",{style:{marginTop:6,fontWeight:600}},
+          "🔐 Akun hanya bisa login di satu device"
+        )
+      ),
+
+      React.createElement("div",{className:"menu"},
+        React.createElement("button",{className:"primary",onClick:()=>openAuto("last")},"Selisih Terakhir"),
+        React.createElement("button",{className:"secondary",onClick:()=>{setMenu("adjust");setSrc("");}},"SO Sudah Adjust"),
+        React.createElement("button",{className:"danger",onClick:()=>{setMenu("daily");setSrc("");}},"Daily Performance"),
+        React.createElement("button",{className:"success",onClick:()=>openAuto("notmain")},"PLU Tidak Main"),
+        React.createElement("button",{className:"warning",onClick:()=>openAuto("disc")},"Discontinue")
+      ),
+
+      menu==="adjust" &&
+        React.createElement("div",{className:"actions"},
+          React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+          React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
+        ),
+
+      menu==="daily" &&
+        React.createElement("div",{className:"actions"},
+          React.createElement("input",{type:"date",onChange:e=>setStart(fmt(new Date(e.target.value)))}),
+          React.createElement("input",{type:"date",onChange:e=>setEnd(fmt(new Date(e.target.value)))}),
+          React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
+        ),
+
+      src &&
+        React.createElement("div",{className:"actions"},
+          React.createElement("button",{className:"refresh",
+            onClick:()=>{setLoading(true);setSrc(src+"&r="+Date.now());}
+          },"🔄 Refresh Laporan")
+        )
+    ),
+
+    src && React.createElement("div",{className:"iframe-box"},
+      loading && React.createElement("div",{className:"loading"},"⏳ Memuat laporan..."),
+      React.createElement("iframe",{src,onLoad:()=>setLoading(false)})
+    ),
+
+    React.createElement("div",{className:"footer"},"© ",new Date().getFullYear()," Sistem Laporan Toko")
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root"))
+  .render(React.createElement(App));
+</script>
+
+</body>
+</html>
