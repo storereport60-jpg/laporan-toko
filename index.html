@@ -57,7 +57,7 @@ firebase.initializeApp({
 });
 const rtdb = firebase.database();
 
-/* ================= DEVICE ID (1 USER = 1 DEVICE) ================= */
+/* ================= DEVICE LOCK ================= */
 function getDeviceId(){
   let id = localStorage.getItem("device_id");
   if(!id){
@@ -76,10 +76,10 @@ const fmt = d =>
 const today = () => fmt(new Date());
 
 const nowText = () => {
-  const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
-  const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-  const d = new Date();
-  return `Sekarang hari ${hari[d.getDay()]}, ${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
+  const hari=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  const bulan=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const d=new Date();
+  return `Hari ${hari[d.getDay()]}, ${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
 };
 
 /* ================= APP ================= */
@@ -93,43 +93,37 @@ function App(){
   const[src,setSrc]=useState("");
   const[loading,setLoading]=useState(false);
 
-  /* ========= LOGIN (DEVICE LOCK) ========= */
+  /* ===== LOGIN ===== */
   const login = async ()=>{
     const snap = await rtdb.ref("userList").once("value");
-    let foundKey=null, foundUser=null;
+    let foundKey=null, found=null;
 
     Object.entries(snap.val()||{}).forEach(([k,u])=>{
       if(u.username?.toUpperCase()===username.toUpperCase()){
-        foundKey=k;
-        foundUser=u;
+        found=u; foundKey=k;
       }
     });
 
-    if(!foundUser) return alert("User tidak terdaftar");
-    if(new Date(foundUser.expired) < new Date())
+    if(!found) return alert("User tidak terdaftar");
+    if(new Date(found.expired) < new Date())
       return alert("Akun expired");
 
-    const deviceId = getDeviceId();
+    const devId = getDeviceId();
+    if(found.deviceId && found.deviceId !== devId)
+      return alert("Akun sudah login di device lain");
 
-    if(foundUser.deviceId && foundUser.deviceId !== deviceId){
-      return alert(
-        "❌ Akun ini sudah login di device lain.\n\nHubungi admin untuk reset device."
-      );
-    }
-
-    if(!foundUser.deviceId){
+    if(!found.deviceId)
       await rtdb.ref("userList/"+foundKey).update({
-        deviceId,
-        lastLogin: new Date().toISOString()
+        deviceId:devId,
+        lastLogin:new Date().toISOString()
       });
-    }
 
-    setUser(foundUser);
+    setUser(found);
   };
 
-  const openAuto = (m)=>{
-    setMenu(m);
-    setDate(""); setStart(""); setEnd("");
+  /* ===== AUTO REPORT ===== */
+  const openAuto = m =>{
+    setMenu(m); setDate(""); setStart(""); setEnd("");
     let url="";
     if(m==="last")
       url=`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.storeId}&dateSo=${today()}`;
@@ -141,6 +135,7 @@ function App(){
     setSrc(url+"&t="+Date.now());
   };
 
+  /* ===== MANUAL REPORT ===== */
   const loadManual = ()=>{
     let url="";
     if(menu==="adjust"){
@@ -148,50 +143,70 @@ function App(){
       url=`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_all_so_absolute_desc?storeId=${user.storeId}&dateSo=${date}`;
     }
     if(menu==="daily"){
-      if(!start||!end) return alert("Pilih tanggal awal & akhir");
+      if(!start||!end) return alert("Pilih periode");
       url=`https://app.alfastore.co.id/prd/api/rpt/laporan/daily_performance?storeId=${user.storeId}&periode1=${start}&periode2=${end}`;
     }
     setLoading(true);
     setSrc(url+"&t="+Date.now());
   };
 
+  /* ===== LOGIN UI ===== */
   if(!user){
     return React.createElement("div",{className:"login card"},
       React.createElement("h2",null,"Login User"),
       React.createElement("input",{placeholder:"Username",onChange:e=>setUsername(e.target.value)}),
       React.createElement("button",{className:"primary",onClick:login},"LOGIN"),
-      React.createElement("button",{className:"secondary",style:{marginTop:10},
-        onClick:()=>window.open(
-          "https://wa.me/6287775798491?text="+
-          encodeURIComponent("Halo admin, saya butuh reset device login."),
-          "_blank"
+      React.createElement("div",{style:{marginTop:12,textAlign:"center"}},
+        React.createElement("a",{href:"admin.html",style:{color:"#1e88e5",fontWeight:600}},
+          "🔐 Login Admin"
         )
-      },"Hubungi Admin")
+      )
     );
   }
 
+  /* ===== DASHBOARD ===== */
   return React.createElement("div",{className:"container"},
     React.createElement("div",{className:"card"},
       React.createElement("div",{className:"header"},
         React.createElement("h3",null,`Selamat Datang, ${user.username}`),
-        React.createElement("span",{className:"badge"},`Masa Aktif: ${user.expired}`),
+        React.createElement("span",{className:"badge"},`Expired: ${user.expired}`),
         React.createElement("button",{className:"danger",onClick:()=>{setUser(null);setSrc("");}},"Logout")
       ),
 
       React.createElement("div",{className:"notice"},
-        React.createElement("div",null,`👋 ${nowText()}`),
+        React.createElement("div",null,"👋 "+nowText()),
         React.createElement("div",{style:{marginTop:6,fontWeight:600}},
-          "🔐 Akun ini hanya bisa login di 1 device"
+          "🔐 Akun hanya bisa login di satu device"
         )
       ),
 
       React.createElement("div",{className:"menu"},
-        React.createElement("button",{className:"primary",onClick:()=>openAuto("last")},"Cetak Selisih Terakhir"),
+        React.createElement("button",{className:"primary",onClick:()=>openAuto("last")},"Selisih Terakhir"),
         React.createElement("button",{className:"secondary",onClick:()=>{setMenu("adjust");setSrc("");}},"SO Sudah Adjust"),
         React.createElement("button",{className:"danger",onClick:()=>{setMenu("daily");setSrc("");}},"Daily Performance"),
         React.createElement("button",{className:"success",onClick:()=>openAuto("notmain")},"PLU Tidak Main"),
         React.createElement("button",{className:"warning",onClick:()=>openAuto("disc")},"Discontinue")
-      )
+      ),
+
+      menu==="adjust" &&
+        React.createElement("div",{className:"actions"},
+          React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+          React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
+        ),
+
+      menu==="daily" &&
+        React.createElement("div",{className:"actions"},
+          React.createElement("input",{type:"date",onChange:e=>setStart(fmt(new Date(e.target.value)))}),
+          React.createElement("input",{type:"date",onChange:e=>setEnd(fmt(new Date(e.target.value)))}),
+          React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
+        ),
+
+      src &&
+        React.createElement("div",{className:"actions"},
+          React.createElement("button",{className:"refresh",
+            onClick:()=>{setLoading(true);setSrc(src+"&r="+Date.now());}
+          },"🔄 Refresh Laporan")
+        )
     ),
 
     src && React.createElement("div",{className:"iframe-box"},
@@ -203,7 +218,9 @@ function App(){
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+ReactDOM.createRoot(document.getElementById("root"))
+  .render(React.createElement(App));
 </script>
+
 </body>
 </html>
