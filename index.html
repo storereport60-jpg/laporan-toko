@@ -33,15 +33,10 @@ button{border:none;color:#fff;font-weight:600;cursor:pointer}
 .iframe-box{position:relative;margin-top:18px}
 iframe{width:100%;height:78vh;border-radius:12px;border:none;background:#fff}
 .loading{
-  position:absolute;
-  inset:0;
+  position:absolute; inset:0;
   background:rgba(255,255,255,.85);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:18px;
-  font-weight:600;
-  color:#1e88e5;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; font-weight:600; color:#1e88e5;
   z-index:10;
 }
 .footer{margin-top:15px;font-size:13px;color:#666;text-align:center}
@@ -61,6 +56,16 @@ firebase.initializeApp({
   projectId: "server-laporan"
 });
 const rtdb = firebase.database();
+
+/* ================= DEVICE ID (1 USER = 1 DEVICE) ================= */
+function getDeviceId(){
+  let id = localStorage.getItem("device_id");
+  if(!id){
+    id = "dev-" + crypto.randomUUID();
+    localStorage.setItem("device_id", id);
+  }
+  return id;
+}
 
 /* ================= UTIL ================= */
 const {useState} = React;
@@ -88,15 +93,38 @@ function App(){
   const[src,setSrc]=useState("");
   const[loading,setLoading]=useState(false);
 
+  /* ========= LOGIN (DEVICE LOCK) ========= */
   const login = async ()=>{
     const snap = await rtdb.ref("userList").once("value");
-    let found=null;
-    Object.values(snap.val()||{}).forEach(u=>{
-      if(u.username?.toUpperCase()===username.toUpperCase()) found=u;
+    let foundKey=null, foundUser=null;
+
+    Object.entries(snap.val()||{}).forEach(([k,u])=>{
+      if(u.username?.toUpperCase()===username.toUpperCase()){
+        foundKey=k;
+        foundUser=u;
+      }
     });
-    if(!found) return alert("User tidak terdaftar");
-    if(new Date(found.expired)<new Date()) return alert("Akun expired");
-    setUser(found);
+
+    if(!foundUser) return alert("User tidak terdaftar");
+    if(new Date(foundUser.expired) < new Date())
+      return alert("Akun expired");
+
+    const deviceId = getDeviceId();
+
+    if(foundUser.deviceId && foundUser.deviceId !== deviceId){
+      return alert(
+        "❌ Akun ini sudah login di device lain.\n\nHubungi admin untuk reset device."
+      );
+    }
+
+    if(!foundUser.deviceId){
+      await rtdb.ref("userList/"+foundKey).update({
+        deviceId,
+        lastLogin: new Date().toISOString()
+      });
+    }
+
+    setUser(foundUser);
   };
 
   const openAuto = (m)=>{
@@ -135,13 +163,10 @@ function App(){
       React.createElement("button",{className:"secondary",style:{marginTop:10},
         onClick:()=>window.open(
           "https://wa.me/6287775798491?text="+
-          encodeURIComponent("Halo admin, saya butuh bantuan login ke dashboard."),
+          encodeURIComponent("Halo admin, saya butuh reset device login."),
           "_blank"
         )
-      },"Hubungi Admin"),
-      React.createElement("div",{style:{marginTop:15,textAlign:"center"}},
-        React.createElement("a",{href:"admin.html",style:{color:"#1e88e5",fontWeight:"600"}},"🔐 Login Admin")
-      )
+      },"Hubungi Admin")
     );
   }
 
@@ -154,9 +179,9 @@ function App(){
       ),
 
       React.createElement("div",{className:"notice"},
-        React.createElement("div",null,`👋 Salam hangat & selamat bekerja. ${nowText()}`),
+        React.createElement("div",null,`👋 ${nowText()}`),
         React.createElement("div",{style:{marginTop:6,fontWeight:600}},
-          "📢 Pengumuman: Untuk layanan hitung setoran tunai / nominal untuk klerek 0, silakan hubungi admin."
+          "🔐 Akun ini hanya bisa login di 1 device"
         )
       ),
 
@@ -166,27 +191,7 @@ function App(){
         React.createElement("button",{className:"danger",onClick:()=>{setMenu("daily");setSrc("");}},"Daily Performance"),
         React.createElement("button",{className:"success",onClick:()=>openAuto("notmain")},"PLU Tidak Main"),
         React.createElement("button",{className:"warning",onClick:()=>openAuto("disc")},"Discontinue")
-      ),
-
-      menu==="adjust" &&
-        React.createElement("div",{className:"actions"},
-          React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
-          React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
-        ),
-
-      menu==="daily" &&
-        React.createElement("div",{className:"actions"},
-          React.createElement("input",{type:"date",onChange:e=>setStart(fmt(new Date(e.target.value)))}),
-          React.createElement("input",{type:"date",onChange:e=>setEnd(fmt(new Date(e.target.value)))}),
-          React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
-        ),
-
-      src &&
-        React.createElement("div",{className:"actions"},
-          React.createElement("button",{className:"refresh",
-            onClick:()=>{setLoading(true);setSrc(src+"&r="+Date.now());}
-          },"🔄 Refresh Laporan")
-        )
+      )
     ),
 
     src && React.createElement("div",{className:"iframe-box"},
