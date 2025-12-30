@@ -7,242 +7,304 @@
 
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <style>
-:root{
- --primary:#2563eb;
- --bg:#f3f4f6;
- --text:#111827;
- --muted:#6b7280;
- --border:#e5e7eb;
-}
-*{box-sizing:border-box}
 body{
- margin:0;
- font-family:Inter,system-ui,Arial;
- background:var(--bg);
- color:var(--text);
+  margin:0;
+  font-family:"Segoe UI",Arial;
+  background:#f4f6fb;
 }
 .center{
- min-height:100vh;
- display:flex;
- align-items:center;
- justify-content:center;
- padding:20px;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.container{
+  max-width:1200px;
+  margin:20px auto;
+  padding:0 15px;
 }
 .card{
- background:#fff;
- border-radius:16px;
- padding:35px;
- box-shadow:0 10px 30px rgba(0,0,0,.08);
- width:100%;
- max-width:420px;
+  background:#fff;
+  border-radius:18px;
+  padding:35px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  position:relative;
+  z-index:10;
 }
-h1{
- margin:0 0 8px;
- text-align:center;
- font-size:26px;
+.login{
+  width:100%;
+  max-width:420px;
 }
-.subtitle{
- text-align:center;
- color:var(--muted);
- margin-bottom:25px;
+.login h1{
+  text-align:center;
+  margin-bottom:6px;
 }
-label{
- font-size:13px;
- font-weight:600;
- margin-bottom:6px;
- display:block;
+.login p{
+  text-align:center;
+  color:#64748b;
+  margin-bottom:25px;
 }
-input{
- width:100%;
- padding:14px;
- border-radius:10px;
- border:1px solid var(--border);
- font-size:15px;
+.form-group{
+  margin-bottom:20px;
 }
-input:focus{
- outline:none;
- border-color:var(--primary);
- box-shadow:0 0 0 2px rgba(37,99,235,.15);
+.form-group label{
+  font-size:13px;
+  font-weight:600;
+  color:#475569;
+  display:block;
+  margin-bottom:6px;
+}
+.form-group input{
+  width:100%;
+  padding:14px;
+  font-size:15px;
+  border-radius:12px;
+  border:1px solid #cbd5e1;
+}
+.form-group input:focus{
+  outline:none;
+  border-color:#2563eb;
+  box-shadow:0 0 0 2px rgba(37,99,235,.15);
 }
 button{
- cursor:pointer;
- border:none;
- border-radius:10px;
- padding:14px;
- font-size:15px;
- font-weight:600;
+  cursor:pointer;
+  border:none;
+  border-radius:12px;
+  padding:14px;
+  font-size:15px;
+  font-weight:600;
+  color:#fff;
 }
-.primary{
- background:var(--primary);
- color:#fff;
- width:100%;
- margin-top:15px;
-}
+.primary{background:#2563eb}
 .primary:hover{background:#1d4ed8}
-.app{
- padding:20px;
- max-width:1300px;
- margin:auto;
-}
-.top{
- display:flex;
- justify-content:space-between;
- align-items:center;
- margin-bottom:10px;
- flex-wrap:wrap;
- gap:10px;
+.secondary{background:#475569}
+.success{background:#16a34a}
+.warning{background:#f59e0b}
+.danger{background:#dc2626}
+.refresh{background:#0d9488}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
 }
 .badge{
- background:#eef2ff;
- color:#3730a3;
- padding:6px 12px;
- border-radius:999px;
- font-size:13px;
- font-weight:600;
+  background:#e0f2fe;
+  color:#0369a1;
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:13px;
+}
+.notice{
+  background:#fff7ed;
+  border-left:5px solid #fb923c;
+  padding:12px;
+  border-radius:8px;
+  margin:15px 0;
 }
 .menu{
- display:flex;
- gap:10px;
- flex-wrap:wrap;
- margin:15px 0;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:12px;
 }
-.menu button{
- padding:10px 14px;
- border-radius:8px;
- background:#e5e7eb;
+.actions{
+  margin-top:15px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
 }
-.menu button:hover{background:#d1d5db}
-.frame-box{
- background:#fff;
- border-radius:12px;
- padding:12px;
- box-shadow:0 6px 18px rgba(0,0,0,.08);
-}
-.frame-actions{
- display:flex;
- justify-content:flex-end;
- gap:10px;
- margin-bottom:10px;
+.iframe-box{
+  position:relative;
+  margin-top:20px;
 }
 iframe{
- width:100%;
- height:75vh;
- border:none;
- border-radius:10px;
+  width:100%;
+  height:78vh;
+  border:none;
+  border-radius:16px;
 }
-.logout{
- background:#ef4444;
- color:#fff;
+.loading{
+  position:absolute;
+  inset:0;
+  background:rgba(255,255,255,.85);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  font-weight:600;
+  color:#2563eb;
+  z-index:20;
 }
-.logout:hover{background:#dc2626}
-.refresh{
- background:#0ea5e9;
- color:#fff;
+.footer{
+  text-align:center;
+  margin:15px 0;
+  font-size:13px;
+  color:#64748b;
 }
-.refresh:hover{background:#0284c7}
 </style>
 </head>
+
 <body>
 <div id="root"></div>
 
 <script>
-/* ================= FIREBASE ================= */
 firebase.initializeApp({
-  apiKey:"ISI_APIKEY_MU",
-  authDomain:"ISI_AUTHDOMAIN",
-  projectId:"ISI_PROJECTID"
+  apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
+  authDomain: "server-laporan.firebaseapp.com",
+  databaseURL: "https://server-laporan-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "server-laporan"
 });
-const db = firebase.firestore();
+const rtdb=firebase.database();
+const {useState}=React;
 
-/* ================= APP ================= */
-const e = React.createElement;
+const fmt=d=>String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
+const today=()=>fmt(new Date());
+const deviceId=()=>navigator.userAgent+"-"+screen.width+"x"+screen.height;
+
+const greeting=()=>{
+ const h=new Date().getHours();
+ if(h<11) return "Selamat Pagi";
+ if(h<15) return "Selamat Siang";
+ if(h<18) return "Selamat Sore";
+ return "Selamat Malam";
+};
+
 function App(){
- const [user,setUser]=React.useState(null);
- const [username,setUsername]=React.useState("");
- const [data,setData]=React.useState(null);
- const [src,setSrc]=React.useState("");
+const[user,setUser]=useState(null);
+const[username,setUsername]=useState("");
+const[menu,setMenu]=useState("");
+const[date,setDate]=useState("");
+const[start,setStart]=useState("");
+const[end,setEnd]=useState("");
+const[src,setSrc]=useState("");
+const[loading,setLoading]=useState(false);
 
- function login(){
-  if(!username) return alert("Username wajib diisi");
-  db.collection("users").doc(username).get().then(d=>{
-    if(!d.exists) return alert("User tidak terdaftar");
-    const v=d.data();
-    if(v.expired && new Date(v.expired)<new Date())
-      return alert("Masa aktif user sudah habis");
-    setUser(username);
-    setData(v);
-  });
+const login=async()=>{
+ if(!username) return alert("Username wajib diisi");
+ const snap=await rtdb.ref("userList").once("value");
+ let found=null,key=null;
+ Object.entries(snap.val()||{}).forEach(([k,u])=>{
+  if(u.username?.toUpperCase()===username){found=u;key=k;}
+ });
+ if(!found) return alert("User tidak terdaftar");
+ if(new Date(found.expired)<new Date()) return alert("Akun expired");
+
+ const myDevice=deviceId();
+ if(found.deviceId && found.deviceId!==myDevice)
+  return alert("Akun sudah digunakan di device lain");
+
+ if(!found.deviceId)
+  rtdb.ref("userList/"+key+"/deviceId").set(myDevice);
+
+ setUser(found);
+};
+
+const openAuto=m=>{
+ setMenu(m);setDate("");setStart("");setEnd("");
+ let url="";
+ if(m==="last")url=`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.storeId}&dateSo=${today()}`;
+ if(m==="notmain")url=`https://app.alfastore.co.id/prd/api/rpt/laporan/laporan_plu_tak_main_toko?storeId=${user.storeId}&dateTx=${today()}`;
+ if(m==="disc")url=`https://app.alfastore.co.id/prd/api/rpt/laporan/rpt_plu_discontinue?storeId=${user.storeId}&dateSo=${today()}&filter_tag=All`;
+ setLoading(true);setSrc(url+"&t="+Date.now());
+};
+
+const loadManual=()=>{
+ let url="";
+ if(menu==="adjust"){
+  if(!date) return alert("Pilih tanggal");
+  url=`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_all_so_absolute_desc?storeId=${user.storeId}&dateSo=${date}`;
  }
-
- function logout(){
-  if(confirm("Logout sekarang?")){
-    setUser(null);
-    setUsername("");
-    setSrc("");
-  }
+ if(menu==="daily"){
+  if(!start||!end) return alert("Pilih tanggal");
+  url=`https://app.alfastore.co.id/prd/api/rpt/laporan/daily_performance?storeId=${user.storeId}&periode1=${start}&periode2=${end}`;
  }
+ setLoading(true);setSrc(url+"&t="+Date.now());
+};
 
- function openReport(type){
-  let base="https://app.alfastore.co.id/prd/api/rpt/laporan/";
-  let url="";
-  if(type==="last") url="selisih_terakhir";
-  if(type==="adjust") url="so_adjust";
-  if(type==="daily") url="daily_performance";
-  if(type==="notmain") url="plu_tidak_main";
-  if(type==="disc") url="discontinue";
-  if(type==="2324") url="rep_gabungan_23_24";
-  setSrc(base+url+"?storeId="+data.storeId+"&r="+Date.now());
- }
+const load2324=()=>{
+ if(!date) return alert("Pilih tanggal");
+ const url=`https://app.alfastore.co.id/prd/api/rpt/laporan/rep_gabungan_23_24?storeId=${user.storeId}&periode1=${date}`;
+ setLoading(true);setSrc(url+"&t="+Date.now());
+};
 
- if(!user){
-  return e("div",{className:"center"},
-   e("div",{className:"card"},
-    e("h1",null,"Login Sistem"),
-    e("div",{className:"subtitle"},"Masukkan username terdaftar"),
-    e("label",null,"Username"),
-    e("input",{
+if(!user){
+ return React.createElement("div",{className:"center"},
+  React.createElement("div",{className:"card login"},
+   React.createElement("h1",null,"Login Sistem"),
+   React.createElement("p",null,"Masukkan username terdaftar"),
+   React.createElement("div",{className:"form-group"},
+    React.createElement("label",null,"Username"),
+    React.createElement("input",{
       value:username,
-      onChange:i=>setUsername(i.target.value.toUpperCase()),
-      placeholder:"USERNAME"
-    }),
-    e("button",{className:"primary",onClick:login},"Masuk")
-   )
-  );
- }
-
- return e("div",{className:"app"},
-  e("div",{className:"top"},
-    e("div",null,
-      e("b",null,"Halo, "+user),
-      " ",
-      e("span",{className:"badge"},"Aktif s/d "+(data.expired||"-"))
-    )
-  ),
-
-  e("div",{className:"menu"},
-    e("button",{onClick:()=>openReport("last")},"Selisih Terakhir"),
-    e("button",{onClick:()=>openReport("adjust")},"SO Adjust"),
-    e("button",{onClick:()=>openReport("daily")},"Daily Performance"),
-    e("button",{onClick:()=>openReport("notmain")},"PLU Tidak Main"),
-    e("button",{onClick:()=>openReport("disc")},"Discontinue"),
-    e("button",{onClick:()=>openReport("2324")},"📊 Laporan 23–24")
-  ),
-
-  src && e("div",{className:"frame-box"},
-    e("div",{className:"frame-actions"},
-      e("button",{className:"refresh",onClick:()=>setSrc(src+"&r="+Date.now())},"🔄 Refresh"),
-      e("button",{className:"logout",onClick:logout},"🚪 Logout")
-    ),
-    e("iframe",{src})
+      placeholder:"USERNAME",
+      onChange:e=>setUsername(e.target.value.toUpperCase()),
+      onKeyDown:e=>{if(e.key==="Enter")login();}
+    })
+   ),
+   React.createElement("button",{className:"primary",onClick:login},"Masuk")
   )
  );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(e(App));
+return React.createElement("div",{className:"container"},
+ React.createElement("div",{className:"card"},
+  React.createElement("div",{className:"header"},
+   React.createElement("h3",null,`${greeting()} ${user.username}`),
+   React.createElement("span",{className:"badge"},"Expired: "+user.expired)
+  ),
+  React.createElement("div",{className:"notice"},
+   "📢 Segera join grup WA: ",
+   React.createElement("a",{href:"https://chat.whatsapp.com/J4CLPxvk942FEufV5FIxY3",target:"_blank"},"Klik di sini")
+  ),
+  React.createElement("div",{className:"menu"},
+   React.createElement("button",{className:"primary",onClick:()=>openAuto("last")},"Selisih Terakhir"),
+   React.createElement("button",{className:"secondary",onClick:()=>{setMenu("adjust");setSrc("");}},"SO Adjust"),
+   React.createElement("button",{className:"danger",onClick:()=>{setMenu("daily");setSrc("");}},"Daily Performance"),
+   React.createElement("button",{className:"success",onClick:()=>openAuto("notmain")},"PLU Tidak Main"),
+   React.createElement("button",{className:"warning",onClick:()=>openAuto("disc")},"Discontinue"),
+   React.createElement("button",{className:"warning",onClick:()=>{setMenu("lap2324");setSrc("");}},"📊 Laporan 23–24")
+  ),
+
+  menu==="adjust"&&React.createElement("div",{className:"actions"},
+   React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+   React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
+  ),
+
+  menu==="daily"&&React.createElement("div",{className:"actions"},
+   React.createElement("input",{type:"date",onChange:e=>setStart(fmt(new Date(e.target.value)))}),
+   React.createElement("input",{type:"date",onChange:e=>setEnd(fmt(new Date(e.target.value)))}),
+   React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
+  ),
+
+  menu==="lap2324"&&React.createElement("div",{className:"actions"},
+   React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+   React.createElement("button",{className:"primary",onClick:load2324},"Tampilkan")
+  ),
+
+  src&&React.createElement("div",{className:"actions"},
+   React.createElement("button",{className:"refresh",onClick:()=>{setLoading(true);setSrc(src+"&r="+Date.now());}},"🔄 Refresh"),
+   React.createElement("button",{className:"danger",onClick:()=>{setUser(null);setSrc("");}},"Logout")
+  )
+ ),
+
+ src&&React.createElement("div",{className:"iframe-box"},
+  loading&&React.createElement("div",{className:"loading"},"⏳ Memuat laporan..."),
+  React.createElement("iframe",{src,onLoad:()=>setLoading(false)})
+ ),
+
+ React.createElement("div",{className:"footer"},"© "+new Date().getFullYear()+" Sistem Laporan Toko")
+);
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
 </script>
 </body>
 </html>
