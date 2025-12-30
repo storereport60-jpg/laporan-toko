@@ -12,27 +12,102 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <style>
-body{margin:0;font-family:"Segoe UI",Arial;background:#f4f6fb}
+body{
+  margin:0;
+  font-family:"Segoe UI",Arial;
+  background:#f4f6fb;
+  min-height:100vh;
+}
 .container{max-width:1200px;margin:25px auto;padding:0 15px}
 .card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 8px 22px rgba(0,0,0,.08)}
-.login{max-width:380px;margin:120px auto}
-.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-.badge{background:#e8f1ff;color:#1e88e5;padding:6px 12px;border-radius:20px;font-size:13px}
-.notice{background:#fff8e1;border-left:5px solid #ffb300;padding:12px;border-radius:6px;margin:15px 0}
-.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-button,input{padding:10px 12px;border-radius:8px;border:1px solid #ccc}
-button{border:none;font-weight:600;color:#fff;cursor:pointer}
+.login-wrap{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.login{
+  max-width:380px;
+  width:100%;
+  text-align:center;
+}
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px
+}
+.badge{
+  background:#e8f1ff;
+  color:#1e88e5;
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:13px
+}
+.notice{
+  background:#fff8e1;
+  border-left:5px solid #ffb300;
+  padding:12px;
+  border-radius:6px;
+  margin:15px 0;
+  font-size:14px
+}
+.notice a{color:#e65100;font-weight:600;text-decoration:none}
+.menu{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:12px;
+  margin-top:10px
+}
+button,input{
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid #ccc
+}
+button{
+  border:none;
+  font-weight:600;
+  color:#fff;
+  cursor:pointer
+}
 .primary{background:#1e88e5}
 .secondary{background:#546e7a}
 .success{background:#43a047}
 .warning{background:#fb8c00}
 .danger{background:#e53935}
 .refresh{background:#26a69a}
-.actions{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap}
+.actions{
+  margin-top:15px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap
+}
 .iframe-box{position:relative;margin-top:18px}
-iframe{width:100%;height:78vh;border-radius:12px;border:none}
-.loading{position:absolute;inset:0;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#1e88e5;z-index:10}
-.footer{text-align:center;margin:15px 0;font-size:13px;color:#666}
+iframe{
+  width:100%;
+  height:78vh;
+  border-radius:12px;
+  border:none
+}
+.loading{
+  position:absolute;
+  inset:0;
+  background:rgba(255,255,255,.85);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  font-weight:600;
+  color:#1e88e5;
+  z-index:10
+}
+.footer{
+  text-align:center;
+  margin:15px 0;
+  font-size:13px;
+  color:#666
+}
 </style>
 </head>
 
@@ -46,12 +121,20 @@ firebase.initializeApp({
   databaseURL: "https://server-laporan-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "server-laporan"
 });
-const rtdb = firebase.database();
-const {useState,useEffect}=React;
+const rtdb=firebase.database();
+const {useState}=React;
 
 const fmt=d=>String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
 const today=()=>fmt(new Date());
 const deviceId=()=>navigator.userAgent+"-"+screen.width+"x"+screen.height;
+
+const greeting=()=>{
+ const h=new Date().getHours();
+ if(h<11)return"Selamat pagi";
+ if(h<15)return"Selamat siang";
+ if(h<18)return"Selamat sore";
+ return"Selamat malam";
+};
 
 function App(){
 const[user,setUser]=useState(null);
@@ -74,15 +157,15 @@ const login=async()=>{
 
  const myDevice=deviceId();
  if(found.deviceId && found.deviceId!==myDevice)
-   return alert("Akun ini sudah login di device lain");
+  return alert("Akun ini sudah login di device lain");
 
  if(!found.deviceId)
-   rtdb.ref("userList/"+key+"/deviceId").set(myDevice);
+  rtdb.ref("userList/"+key+"/deviceId").set(myDevice);
 
  setUser(found);
 };
 
-const openAuto=(m)=>{
+const openAuto=m=>{
  setMenu(m);setDate("");setStart("");setEnd("");
  let url="";
  if(m==="last")url=`https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.storeId}&dateSo=${today()}`;
@@ -111,22 +194,27 @@ const load2324=()=>{
 };
 
 if(!user){
- return React.createElement("div",{className:"login card"},
-  React.createElement("h2",null,"Login User"),
-  React.createElement("input",{placeholder:"Username",onChange:e=>setUsername(e.target.value)}),
-  React.createElement("button",{className:"primary",onClick:login},"LOGIN")
+ return React.createElement("div",{className:"login-wrap"},
+  React.createElement("div",{className:"login card"},
+   React.createElement("h2",null,"Login User"),
+   React.createElement("input",{placeholder:"Username",onChange:e=>setUsername(e.target.value)}),
+   React.createElement("button",{className:"primary",style:{marginTop:10},onClick:login},"LOGIN")
+  )
  );
 }
 
 return React.createElement("div",{className:"container"},
  React.createElement("div",{className:"card"},
   React.createElement("div",{className:"header"},
-   React.createElement("h3",null,"Selamat datang Pak Imron 👋"),
+   React.createElement("h3",null,`${greeting()} ${user.username} 👋`),
    React.createElement("span",{className:"badge"},"Expired: "+user.expired),
    React.createElement("button",{className:"danger",onClick:()=>{setUser(null);setSrc("");}},"Logout")
   ),
 
-  React.createElement("div",{className:"notice"},"📢 Gunakan sistem ini dengan bijak. Satu akun hanya satu device."),
+  React.createElement("div",{className:"notice"},
+   "📢 Wajib join grup WhatsApp untuk info & update → ",
+   React.createElement("a",{href:"https://chat.whatsapp.com/J4CLPxvk942FEufV5FIxY3",target:"_blank"},"JOIN GRUP")
+  ),
 
   React.createElement("div",{className:"menu"},
    React.createElement("button",{className:"primary",onClick:()=>openAuto("last")},"Selisih Terakhir"),
@@ -138,23 +226,23 @@ return React.createElement("div",{className:"container"},
   ),
 
   menu==="adjust"&&React.createElement("div",{className:"actions"},
-    React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
-    React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
+   React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+   React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
   ),
 
   menu==="daily"&&React.createElement("div",{className:"actions"},
-    React.createElement("input",{type:"date",onChange:e=>setStart(fmt(new Date(e.target.value)))}),
-    React.createElement("input",{type:"date",onChange:e=>setEnd(fmt(new Date(e.target.value)))}),
-    React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
+   React.createElement("input",{type:"date",onChange:e=>setStart(fmt(new Date(e.target.value)))}),
+   React.createElement("input",{type:"date",onChange:e=>setEnd(fmt(new Date(e.target.value)))}),
+   React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
   ),
 
   menu==="lap2324"&&React.createElement("div",{className:"actions"},
-    React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
-    React.createElement("button",{className:"primary",onClick:load2324},"Tampilkan")
+   React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+   React.createElement("button",{className:"primary",onClick:load2324},"Tampilkan")
   ),
 
   src&&React.createElement("div",{className:"actions"},
-    React.createElement("button",{className:"refresh",onClick:()=>{setLoading(true);setSrc(src+"&r="+Date.now());}},"🔄 Refresh")
+   React.createElement("button",{className:"refresh",onClick:()=>{setLoading(true);setSrc(src+"&r="+Date.now());}},"🔄 Refresh")
   )
  ),
 
