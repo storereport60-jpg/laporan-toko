@@ -19,79 +19,59 @@ body{
   min-height:100vh;
 }
 .container{max-width:1200px;margin:25px auto;padding:0 15px}
-.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 8px 22px rgba(0,0,0,.08)}
+.card{background:#fff;border-radius:14px;padding:24px;box-shadow:0 8px 22px rgba(0,0,0,.08)}
 .login-wrap{
   min-height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
 }
-.login{
-  max-width:380px;
+.login{max-width:420px;width:100%}
+.login h1{text-align:center;font-size:24px;margin-bottom:5px}
+.subtitle{text-align:center;color:#64748b;font-size:14px;margin-bottom:25px}
+
+.form-group{margin-bottom:18px}
+.form-group label{font-size:13px;font-weight:600;color:#475569;margin-bottom:6px;display:block}
+.form-group input{
   width:100%;
-  text-align:center;
+  padding:12px 14px;
+  border-radius:10px;
+  border:1px solid #cbd5e1;
+  font-size:15px
 }
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:10px
+.form-group input:focus{
+  outline:none;
+  border-color:#2563eb;
+  box-shadow:0 0 0 2px rgba(37,99,235,.15)
 }
-.badge{
-  background:#e8f1ff;
-  color:#1e88e5;
-  padding:6px 12px;
-  border-radius:20px;
-  font-size:13px
-}
-.notice{
-  background:#fff8e1;
-  border-left:5px solid #ffb300;
-  padding:12px;
-  border-radius:6px;
-  margin:15px 0;
-  font-size:14px
-}
-.notice a{color:#e65100;font-weight:600;text-decoration:none}
-.menu{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:12px;
-  margin-top:10px
-}
-button,input{
-  padding:10px 12px;
-  border-radius:8px;
-  border:1px solid #ccc;
-  width:100%
-}
+
 button{
+  padding:12px;
+  border-radius:10px;
   border:none;
   font-weight:600;
-  color:#fff;
-  cursor:pointer
+  cursor:pointer;
+  color:#fff
 }
-.primary{background:#1e88e5}
+.primary{background:#2563eb}
+.primary:hover{background:#1d4ed8}
 .secondary{background:#546e7a}
 .success{background:#43a047}
 .warning{background:#fb8c00}
 .danger{background:#e53935}
 .refresh{background:#26a69a}
-.actions{
-  margin-top:15px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap
+
+.menu{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:12px;
+  margin-top:15px
 }
-.actions input,.actions button{width:auto}
+
+.actions{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap}
 .iframe-box{position:relative;margin-top:18px}
-iframe{
-  width:100%;
-  height:78vh;
-  border-radius:12px;
-  border:none
-}
+iframe{width:100%;height:78vh;border-radius:14px;border:none}
+
 .loading{
   position:absolute;
   inset:0;
@@ -101,15 +81,22 @@ iframe{
   justify-content:center;
   font-size:18px;
   font-weight:600;
-  color:#1e88e5;
+  color:#2563eb;
   z-index:10
 }
-.footer{
-  text-align:center;
+
+.notice{
+  background:#fff8e1;
+  border-left:5px solid #ffb300;
+  padding:12px;
+  border-radius:8px;
   margin:15px 0;
-  font-size:13px;
-  color:#666
+  font-size:14px
 }
+.notice a{color:#e65100;font-weight:600;text-decoration:none}
+
+.footer{text-align:center;margin:20px 0;font-size:13px;color:#666}
+.center{text-align:center}
 </style>
 </head>
 
@@ -198,28 +185,24 @@ const load2324=()=>{
 if(!user){
  return React.createElement("div",{className:"login-wrap"},
   React.createElement("div",{className:"login card"},
-   React.createElement("h2",null,"Login User"),
-   React.createElement("input",{
-     placeholder:"USERNAME",
-     value:username,
-     onChange:e=>setUsername(e.target.value.toUpperCase())
-   }),
-   React.createElement("button",{
-     className:"primary",
-     style:{marginTop:10},
-     onClick:login
-   },"LOGIN")
+   React.createElement("h1",null,"Sistem Laporan Toko"),
+   React.createElement("div",{className:"subtitle"},"Login User"),
+   React.createElement("div",{className:"form-group"},
+    React.createElement("label",null,"Username"),
+    React.createElement("input",{
+      value:username,
+      placeholder:"Masukkan username",
+      onChange:e=>setUsername(e.target.value.toUpperCase())
+    })
+   ),
+   React.createElement("button",{className:"primary",onClick:login},"LOGIN")
   )
  );
 }
 
 return React.createElement("div",{className:"container"},
  React.createElement("div",{className:"card"},
-  React.createElement("div",{className:"header"},
-   React.createElement("h3",null,`${greeting()} ${user.username} 👋`),
-   React.createElement("span",{className:"badge"},"Expired: "+user.expired),
-   React.createElement("button",{className:"danger",onClick:()=>{setUser(null);setSrc("");}},"Logout")
-  ),
+  React.createElement("h3",null,`${greeting()} ${user.username} 👋`),
 
   React.createElement("div",{className:"notice"},
    "📢 Wajib join grup WhatsApp untuk info & update → ",
@@ -233,6 +216,22 @@ return React.createElement("div",{className:"container"},
    React.createElement("button",{className:"success",onClick:()=>openAuto("notmain")},"PLU Tidak Main"),
    React.createElement("button",{className:"warning",onClick:()=>openAuto("disc")},"Discontinue"),
    React.createElement("button",{className:"warning",onClick:()=>{setMenu("lap2324");setSrc("");}},"📊 Laporan 23–24")
+  ),
+
+  menu==="adjust"&&React.createElement("div",{className:"actions"},
+   React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+   React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
+  ),
+
+  menu==="daily"&&React.createElement("div",{className:"actions"},
+   React.createElement("input",{type:"date",onChange:e=>setStart(fmt(new Date(e.target.value)))}),
+   React.createElement("input",{type:"date",onChange:e=>setEnd(fmt(new Date(e.target.value)))}),
+   React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
+  ),
+
+  menu==="lap2324"&&React.createElement("div",{className:"actions"},
+   React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+   React.createElement("button",{className:"primary",onClick:load2324},"Tampilkan")
   )
  ),
 
@@ -241,12 +240,16 @@ return React.createElement("div",{className:"container"},
   React.createElement("iframe",{src,onLoad:()=>setLoading(false)})
  ),
 
+ src&&React.createElement("div",{className:"center",style:{marginTop:15}},
+  React.createElement("button",{className:"refresh",onClick:()=>{setLoading(true);setSrc(src+"&r="+Date.now());}},"🔄 Refresh"),
+  React.createElement("button",{className:"danger",style:{marginLeft:10},onClick:()=>{setUser(null);setSrc("");}},"Logout")
+ ),
+
  React.createElement("div",{className:"footer"},"© "+new Date().getFullYear()+" Sistem Laporan Toko")
 );
 }
 
-ReactDOM.createRoot(document.getElementById("root"))
-.render(React.createElement(App));
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
 </script>
 </body>
 </html>
