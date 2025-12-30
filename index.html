@@ -17,6 +17,8 @@ body{
   font-family:"Segoe UI",Arial;
   background:#f4f6fb;
 }
+
+/* ===== LOGIN CENTER ===== */
 .center{
   min-height:100vh;
   display:flex;
@@ -24,63 +26,83 @@ body{
   justify-content:center;
   padding:20px;
 }
+
+/* ===== CONTAINER ===== */
 .container{
   max-width:1200px;
   margin:20px auto;
   padding:0 15px;
 }
+
+/* ===== CARD ===== */
 .card{
   background:#fff;
-  border-radius:18px;
-  padding:35px;
-  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  border-radius:20px;
+  padding:40px;
+  box-shadow:0 12px 35px rgba(0,0,0,.08);
   position:relative;
   z-index:10;
 }
+
+/* ===== LOGIN UI FINAL ===== */
 .login{
   width:100%;
-  max-width:420px;
+  max-width:480px;
+  padding:50px 45px;
 }
+
 .login h1{
   text-align:center;
-  margin-bottom:6px;
+  font-size:28px;
+  font-weight:700;
+  color:#0f172a;
+  margin-bottom:10px;
 }
+
 .login p{
   text-align:center;
+  font-size:15px;
   color:#64748b;
-  margin-bottom:25px;
+  margin-bottom:32px;
 }
+
 .form-group{
-  margin-bottom:20px;
+  margin-bottom:22px;
 }
+
 .form-group label{
-  font-size:13px;
-  font-weight:600;
-  color:#475569;
-  display:block;
-  margin-bottom:6px;
+  display:none;
 }
+
 .form-group input{
   width:100%;
-  padding:14px;
-  font-size:15px;
-  border-radius:12px;
+  padding:18px;
+  font-size:16px;
+  border-radius:14px;
   border:1px solid #cbd5e1;
 }
+
 .form-group input:focus{
   outline:none;
   border-color:#2563eb;
   box-shadow:0 0 0 2px rgba(37,99,235,.15);
 }
+
+/* ===== BUTTON ===== */
 button{
   cursor:pointer;
   border:none;
-  border-radius:12px;
-  padding:14px;
-  font-size:15px;
+  border-radius:14px;
+  padding:16px;
+  font-size:16px;
   font-weight:600;
   color:#fff;
 }
+
+.login button{
+  width:100%;
+}
+
 .primary{background:#2563eb}
 .primary:hover{background:#1d4ed8}
 .secondary{background:#475569}
@@ -89,6 +111,7 @@ button{
 .danger{background:#dc2626}
 .refresh{background:#0d9488}
 
+/* ===== HEADER ===== */
 .header{
   display:flex;
   justify-content:space-between;
@@ -96,41 +119,53 @@ button{
   flex-wrap:wrap;
   gap:10px;
 }
+
 .badge{
   background:#e0f2fe;
   color:#0369a1;
-  padding:6px 12px;
+  padding:6px 14px;
   border-radius:20px;
   font-size:13px;
 }
+
+/* ===== NOTICE ===== */
 .notice{
   background:#fff7ed;
   border-left:5px solid #fb923c;
-  padding:12px;
-  border-radius:8px;
-  margin:15px 0;
+  padding:14px;
+  border-radius:10px;
+  margin:18px 0;
 }
+
+/* ===== MENU ===== */
 .menu{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
   gap:12px;
 }
+
+/* ===== ACTIONS ===== */
 .actions{
   margin-top:15px;
   display:flex;
   gap:10px;
   flex-wrap:wrap;
 }
+
+/* ===== IFRAME ===== */
 .iframe-box{
   position:relative;
   margin-top:20px;
 }
+
 iframe{
   width:100%;
   height:78vh;
   border:none;
-  border-radius:16px;
+  border-radius:18px;
 }
+
+/* ===== LOADING ===== */
 .loading{
   position:absolute;
   inset:0;
@@ -143,9 +178,11 @@ iframe{
   color:#2563eb;
   z-index:20;
 }
+
+/* ===== FOOTER ===== */
 .footer{
   text-align:center;
-  margin:15px 0;
+  margin:18px 0;
   font-size:13px;
   color:#64748b;
 }
@@ -187,6 +224,7 @@ const[end,setEnd]=useState("");
 const[src,setSrc]=useState("");
 const[loading,setLoading]=useState(false);
 
+/* ===== LOGIN LOGIC (TIDAK DIUBAH) ===== */
 const login=async()=>{
  if(!username) return alert("Username wajib diisi");
  const snap=await rtdb.ref("userList").once("value");
@@ -207,6 +245,7 @@ const login=async()=>{
  setUser(found);
 };
 
+/* ===== REPORTS (TIDAK DIUBAH) ===== */
 const openAuto=m=>{
  setMenu(m);setDate("");setStart("");setEnd("");
  let url="";
@@ -235,13 +274,13 @@ const load2324=()=>{
  setLoading(true);setSrc(url+"&t="+Date.now());
 };
 
+/* ===== LOGIN VIEW ===== */
 if(!user){
  return React.createElement("div",{className:"center"},
   React.createElement("div",{className:"card login"},
    React.createElement("h1",null,"Login Sistem"),
    React.createElement("p",null,"Masukkan username terdaftar"),
    React.createElement("div",{className:"form-group"},
-    React.createElement("label",null,"Username"),
     React.createElement("input",{
       value:username,
       placeholder:"USERNAME",
@@ -254,6 +293,7 @@ if(!user){
  );
 }
 
+/* ===== DASHBOARD ===== */
 return React.createElement("div",{className:"container"},
  React.createElement("div",{className:"card"},
   React.createElement("div",{className:"header"},
@@ -304,7 +344,8 @@ return React.createElement("div",{className:"container"},
 );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+ReactDOM.createRoot(document.getElementById("root"))
+.render(React.createElement(App));
 </script>
 </body>
 </html>
