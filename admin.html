@@ -42,7 +42,6 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
 <!-- LOGIN ADMIN -->
 <div id="loginWrap" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
   <div class="card" style="max-width:380px;width:100%">
-
     <h2 style="text-align:center">🔐 Admin Login</h2>
 
     <input
@@ -58,7 +57,6 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
     <button class="primary" style="width:100%" onclick="loginAdmin()">
       LOGIN
     </button>
-
   </div>
 </div>
 
@@ -100,11 +98,11 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
     </table>
 
     <button class="danger" style="margin-top:15px" onclick="logout()">Logout</button>
-
   </div>
 </div>
 
 <script>
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
   authDomain: "server-laporan.firebaseapp.com",
@@ -113,9 +111,11 @@ firebase.initializeApp({
 });
 const db = firebase.database();
 
+/* ================= CONFIG ================= */
 const ADMIN_PIN = "500000";
 let USERS = {};
 
+/* ================= LOGIN ================= */
 function loginAdmin(){
   const pin = document.getElementById("pin").value;
   if(pin.length !== 6) return alert("PIN harus 6 digit");
@@ -126,6 +126,7 @@ function loginAdmin(){
   loadUsers();
 }
 
+/* ================= LOAD USERS ================= */
 function loadUsers(){
   db.ref("userList").on("value",snap=>{
     USERS = snap.val() || {};
@@ -134,55 +135,75 @@ function loadUsers(){
   });
 }
 
+/* ================= RENDER TABLE ================= */
 function renderTable(){
-  const q=document.getElementById("search").value.toLowerCase();
-  const tbody=document.getElementById("list");
-  tbody.innerHTML="";
+  const q = document.getElementById("search").value.toLowerCase();
+  const tbody = document.getElementById("list");
+  tbody.innerHTML = "";
 
   Object.keys(USERS).forEach(id=>{
-    const u=USERS[id];
+    const u = USERS[id];
     if(q && !u.username.toLowerCase().includes(q) && !u.storeId.toLowerCase().includes(q)) return;
 
-    tbody.innerHTML+=`
-    <tr>
-      <td>${u.username}</td>
-      <td>${u.storeId}</td>
-      <td>${u.expired}</td>
-      <td>${u.deviceId ? "🔒 Terkunci" : "🟢 Bebas"}</td>
-      <td>
-        <button class="warning" onclick="editUser('${id}')">Edit</button>
-        <button class="secondary" onclick="resetDevice('${id}','${u.username}')">Reset</button>
-        <button class="danger" onclick="delUser('${id}')">Hapus</button>
-      </td>
-    </tr>`;
+    tbody.innerHTML += `
+      <tr>
+        <td>${u.username}</td>
+        <td>${u.storeId}</td>
+        <td>${u.expired}</td>
+        <td>${u.deviceId ? "🔒 Terkunci" : "🟢 Bebas"}</td>
+        <td>
+          <button class="warning" onclick="editUser('${id}')">Edit</button>
+          <button class="secondary" onclick="resetDevice('${id}','${u.username}')">Reset</button>
+          <button class="danger" onclick="delUser('${id}')">Hapus</button>
+        </td>
+      </tr>`;
   });
 }
 
+/* ================= ADD USER (FIXED) ================= */
 function addUser(){
-  const u=document.getElementById("u").value;
-  const s=document.getElementById("s").value;
-  const e=document.getElementById("e").value;
-  if(!u||!s||!e) return alert("Lengkapi data");
-  db.ref("userList").push({username:u,storeId:s,expired:e});
-  u.value=s.value=e.value="";
+  const uEl = document.getElementById("u");
+  const sEl = document.getElementById("s");
+  const eEl = document.getElementById("e");
+
+  const u = uEl.value;
+  const s = sEl.value;
+  const e = eEl.value;
+
+  if(!u || !s || !e) return alert("Lengkapi data");
+
+  db.ref("userList").push({
+    username: u,
+    storeId: s,
+    expired: e
+  });
+
+  uEl.value = "";
+  sEl.value = "";
+  eEl.value = "";
 }
 
+/* ================= EDIT / DELETE ================= */
 function editUser(id){
-  const u=prompt("Username baru");
-  const s=prompt("Store ID baru");
-  const e=prompt("Expired (YYYY-MM-DD)");
-  if(u&&s&&e) db.ref("userList/"+id).update({username:u,storeId:s,expired:e});
+  const u = prompt("Username baru");
+  const s = prompt("Store ID baru");
+  const e = prompt("Expired (YYYY-MM-DD)");
+  if(u && s && e)
+    db.ref("userList/"+id).update({username:u,storeId:s,expired:e});
 }
 
 function delUser(id){
-  if(confirm("Hapus user ini?")) db.ref("userList/"+id).remove();
+  if(confirm("Hapus user ini?"))
+    db.ref("userList/"+id).remove();
 }
 
+/* ================= RESET DEVICE ================= */
 function resetDevice(id,name){
   if(confirm(`Reset device ${name}?`))
     db.ref("userList/"+id).update({deviceId:null,lastLogin:null});
 }
 
+/* ================= LOGOUT ================= */
 function logout(){
   location.reload();
 }
