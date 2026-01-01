@@ -39,9 +39,10 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
 
 <body>
 
-<!-- LOGIN ADMIN -->
+<!-- ================= LOGIN ADMIN ================= -->
 <div id="loginWrap" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
   <div class="card" style="max-width:380px;width:100%">
+
     <h2 style="text-align:center">🔐 Admin Login</h2>
 
     <input
@@ -57,47 +58,51 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
     <button class="primary" style="width:100%" onclick="loginAdmin()">
       LOGIN
     </button>
+
   </div>
 </div>
 
-<!-- PANEL ADMIN -->
-<div id="panel" class="container hidden">
-  <div class="card" style="margin:30px">
+<!-- ================= PANEL ADMIN ================= -->
+<div id="panel" class="hidden">
+  <div class="container">
+    <div class="card" style="margin:30px">
 
-    <h2>Administrator Area</h2>
+      <h2>Administrator Area</h2>
 
-    <div class="welcome">
-      👋 <strong>Selamat datang Pak Imron</strong><br>
-      Semoga hari Anda menyenangkan dan seluruh pekerjaan berjalan lancar.
+      <div class="welcome">
+        👋 <strong>Selamat datang Pak Imron</strong><br>
+        Semoga hari Anda menyenangkan dan seluruh pekerjaan berjalan lancar.
+      </div>
+
+      <h3>User Management</h3>
+      <div class="flex">
+        <input id="u" placeholder="Username">
+        <input id="s" placeholder="Store ID">
+        <input id="e" type="date">
+        <button class="success" onclick="addUser()">Tambah</button>
+      </div>
+
+      <div class="flex" style="margin-top:20px">
+        <input id="search" placeholder="🔎 Cari username / store ID" oninput="renderTable()">
+        <span class="badge">👥 Total User: <span id="total">0</span></span>
+      </div>
+
+      <table style="margin-top:10px">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Store</th>
+            <th>Expired</th>
+            <th>Device</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="list"></tbody>
+      </table>
+
+      <button class="danger" style="margin-top:15px" onclick="logout()">Logout</button>
+
     </div>
-
-    <h3>User Management</h3>
-    <div class="flex">
-      <input id="u" placeholder="Username">
-      <input id="s" placeholder="Store ID">
-      <input id="e" type="date">
-      <button class="success" onclick="addUser()">Tambah</button>
-    </div>
-
-    <div class="flex" style="margin-top:20px">
-      <input id="search" placeholder="🔎 Cari username / store ID" oninput="renderTable()">
-      <span class="badge">👥 Total User: <span id="total">0</span></span>
-    </div>
-
-    <table style="margin-top:10px">
-      <thead>
-        <tr>
-          <th>Username</th>
-          <th>Store</th>
-          <th>Expired</th>
-          <th>Device</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="list"></tbody>
-    </table>
-
-    <button class="danger" style="margin-top:15px" onclick="logout()">Logout</button>
   </div>
 </div>
 
@@ -118,17 +123,26 @@ let USERS = {};
 /* ================= LOGIN ================= */
 function loginAdmin(){
   const pin = document.getElementById("pin").value;
-  if(pin.length !== 6) return alert("PIN harus 6 digit");
-  if(pin !== ADMIN_PIN) return alert("PIN salah");
 
-  document.getElementById("loginWrap").classList.add("hidden");
+  if(pin.length !== 6){
+    alert("PIN harus 6 digit");
+    return;
+  }
+  if(pin !== ADMIN_PIN){
+    alert("PIN salah");
+    return;
+  }
+
+  // 🔥 HILANGKAN LOGIN TOTAL
+  document.getElementById("loginWrap").style.display = "none";
   document.getElementById("panel").classList.remove("hidden");
+
   loadUsers();
 }
 
 /* ================= LOAD USERS ================= */
 function loadUsers(){
-  db.ref("userList").on("value",snap=>{
+  db.ref("userList").on("value", snap=>{
     USERS = snap.val() || {};
     document.getElementById("total").innerText = Object.keys(USERS).length;
     renderTable();
@@ -160,36 +174,26 @@ function renderTable(){
   });
 }
 
-/* ================= ADD USER (FIXED) ================= */
+/* ================= CRUD ================= */
 function addUser(){
-  const uEl = document.getElementById("u");
-  const sEl = document.getElementById("s");
-  const eEl = document.getElementById("e");
-
-  const u = uEl.value;
-  const s = sEl.value;
-  const e = eEl.value;
-
+  const u = document.getElementById("u").value;
+  const s = document.getElementById("s").value;
+  const e = document.getElementById("e").value;
   if(!u || !s || !e) return alert("Lengkapi data");
 
-  db.ref("userList").push({
-    username: u,
-    storeId: s,
-    expired: e
-  });
+  db.ref("userList").push({ username:u, storeId:s, expired:e });
 
-  uEl.value = "";
-  sEl.value = "";
-  eEl.value = "";
+  document.getElementById("u").value="";
+  document.getElementById("s").value="";
+  document.getElementById("e").value="";
 }
 
-/* ================= EDIT / DELETE ================= */
 function editUser(id){
   const u = prompt("Username baru");
   const s = prompt("Store ID baru");
   const e = prompt("Expired (YYYY-MM-DD)");
   if(u && s && e)
-    db.ref("userList/"+id).update({username:u,storeId:s,expired:e});
+    db.ref("userList/"+id).update({ username:u, storeId:s, expired:e });
 }
 
 function delUser(id){
@@ -197,10 +201,9 @@ function delUser(id){
     db.ref("userList/"+id).remove();
 }
 
-/* ================= RESET DEVICE ================= */
 function resetDevice(id,name){
   if(confirm(`Reset device ${name}?`))
-    db.ref("userList/"+id).update({deviceId:null,lastLogin:null});
+    db.ref("userList/"+id).update({ deviceId:null, lastLogin:null });
 }
 
 /* ================= LOGOUT ================= */
