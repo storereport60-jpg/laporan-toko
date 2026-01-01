@@ -11,7 +11,7 @@
 <style>
 body{font-family:Arial;background:#eef2f6;margin:0}
 .card{background:#fff;border-radius:8px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
-.container{max-width:1200px;margin:30px auto}
+.container{max-width:1200px;margin:auto}
 table{width:100%;border-collapse:collapse}
 th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left;font-size:14px}
 th{background:#f5f5f5}
@@ -39,27 +39,41 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
 
 <body>
 
-<div class="container">
+<!-- LOGIN ADMIN -->
+<div id="loginWrap" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
+  <div class="card" style="max-width:380px;width:100%">
 
-  <!-- LOGIN ADMIN -->
-  <div id="login" class="card">
-    <h2>🔐 Admin Login</h2>
-    <input id="pin" type="password" placeholder="Masukkan PIN Admin">
-    <button class="primary" onclick="loginAdmin()">LOGIN</button>
+    <h2 style="text-align:center">🔐 Admin Login</h2>
+
+    <input
+      id="pin"
+      type="password"
+      inputmode="numeric"
+      maxlength="6"
+      placeholder="Masukkan PIN Admin (6 digit)"
+      oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+      style="width:100%;margin-bottom:12px"
+    >
+
+    <button class="primary" style="width:100%" onclick="loginAdmin()">
+      LOGIN
+    </button>
+
   </div>
+</div>
 
-  <!-- PANEL -->
-  <div id="panel" class="card hidden">
-    <h2>🧑‍💼 Admin Panel</h2>
+<!-- PANEL ADMIN -->
+<div id="panel" class="container hidden">
+  <div class="card" style="margin:30px">
 
-    <!-- WELCOME -->
+    <h2>Administrator Area</h2>
+
     <div class="welcome">
       👋 <strong>Selamat datang Pak Imron</strong><br>
       Semoga hari Anda menyenangkan dan seluruh pekerjaan berjalan lancar.
     </div>
 
-    <!-- ADD USER -->
-    <h3>➕ Tambah User</h3>
+    <h3>User Management</h3>
     <div class="flex">
       <input id="u" placeholder="Username">
       <input id="s" placeholder="Store ID">
@@ -67,13 +81,11 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
       <button class="success" onclick="addUser()">Tambah</button>
     </div>
 
-    <!-- SEARCH + TOTAL -->
-    <div class="flex" style="margin-top:25px">
+    <div class="flex" style="margin-top:20px">
       <input id="search" placeholder="🔎 Cari username / store ID" oninput="renderTable()">
       <span class="badge">👥 Total User: <span id="total">0</span></span>
     </div>
 
-    <!-- TABLE -->
     <table style="margin-top:10px">
       <thead>
         <tr>
@@ -88,12 +100,11 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
     </table>
 
     <button class="danger" style="margin-top:15px" onclick="logout()">Logout</button>
-  </div>
 
+  </div>
 </div>
 
 <script>
-/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
   authDomain: "server-laporan.firebaseapp.com",
@@ -102,21 +113,19 @@ firebase.initializeApp({
 });
 const db = firebase.database();
 
-/* ================= CONFIG ================= */
-const ADMIN_PIN = "500000"; // 🔴 GANTI PIN
+const ADMIN_PIN = "500000";
 let USERS = {};
 
-/* ================= LOGIN ================= */
 function loginAdmin(){
-  if(document.getElementById("pin").value !== ADMIN_PIN){
-    alert("PIN salah"); return;
-  }
-  document.getElementById("login").classList.add("hidden");
+  const pin = document.getElementById("pin").value;
+  if(pin.length !== 6) return alert("PIN harus 6 digit");
+  if(pin !== ADMIN_PIN) return alert("PIN salah");
+
+  document.getElementById("loginWrap").classList.add("hidden");
   document.getElementById("panel").classList.remove("hidden");
   loadUsers();
 }
 
-/* ================= LOAD USERS ================= */
 function loadUsers(){
   db.ref("userList").on("value",snap=>{
     USERS = snap.val() || {};
@@ -125,75 +134,55 @@ function loadUsers(){
   });
 }
 
-/* ================= RENDER TABLE ================= */
 function renderTable(){
-  const q = document.getElementById("search").value.toLowerCase();
-  const tbody = document.getElementById("list");
+  const q=document.getElementById("search").value.toLowerCase();
+  const tbody=document.getElementById("list");
   tbody.innerHTML="";
 
   Object.keys(USERS).forEach(id=>{
-    const u = USERS[id];
-    if(
-      q &&
-      !u.username.toLowerCase().includes(q) &&
-      !u.storeId.toLowerCase().includes(q)
-    ) return;
+    const u=USERS[id];
+    if(q && !u.username.toLowerCase().includes(q) && !u.storeId.toLowerCase().includes(q)) return;
 
-    const locked = u.deviceId ? "🔒 Terkunci" : "🟢 Bebas";
-
-    tbody.innerHTML += `
-      <tr>
-        <td>${u.username}</td>
-        <td>${u.storeId}</td>
-        <td>${u.expired}</td>
-        <td>
-          ${locked}
-          ${u.lastLogin ? `<div class="small">Last: ${new Date(u.lastLogin).toLocaleString()}</div>` : ""}
-        </td>
-        <td>
-          <button class="warning" onclick="editUser('${id}')">Edit</button>
-          <button class="secondary" onclick="resetDevice('${id}','${u.username}')">Reset Device</button>
-          <button class="danger" onclick="delUser('${id}')">Hapus</button>
-        </td>
-      </tr>`;
+    tbody.innerHTML+=`
+    <tr>
+      <td>${u.username}</td>
+      <td>${u.storeId}</td>
+      <td>${u.expired}</td>
+      <td>${u.deviceId ? "🔒 Terkunci" : "🟢 Bebas"}</td>
+      <td>
+        <button class="warning" onclick="editUser('${id}')">Edit</button>
+        <button class="secondary" onclick="resetDevice('${id}','${u.username}')">Reset</button>
+        <button class="danger" onclick="delUser('${id}')">Hapus</button>
+      </td>
+    </tr>`;
   });
 }
 
-/* ================= CRUD ================= */
 function addUser(){
   const u=document.getElementById("u").value;
   const s=document.getElementById("s").value;
   const e=document.getElementById("e").value;
   if(!u||!s||!e) return alert("Lengkapi data");
-
-  db.ref("userList").push({ username:u, storeId:s, expired:e });
-
-  document.getElementById("u").value="";
-  document.getElementById("s").value="";
-  document.getElementById("e").value="";
-}
-
-function delUser(id){
-  if(confirm("Hapus user ini?"))
-    db.ref("userList/"+id).remove();
+  db.ref("userList").push({username:u,storeId:s,expired:e});
+  u.value=s.value=e.value="";
 }
 
 function editUser(id){
-  const u=prompt("Username baru:");
-  const s=prompt("Store ID baru:");
-  const e=prompt("Expired (YYYY-MM-DD):");
-  if(u&&s&&e)
-    db.ref("userList/"+id).update({ username:u, storeId:s, expired:e });
+  const u=prompt("Username baru");
+  const s=prompt("Store ID baru");
+  const e=prompt("Expired (YYYY-MM-DD)");
+  if(u&&s&&e) db.ref("userList/"+id).update({username:u,storeId:s,expired:e});
 }
 
-/* ================= RESET DEVICE ================= */
-function resetDevice(id,username){
-  if(!confirm(`Reset device untuk ${username}?`)) return;
-  db.ref("userList/"+id).update({ deviceId:null, lastLogin:null });
-  alert("✅ Device berhasil di-reset");
+function delUser(id){
+  if(confirm("Hapus user ini?")) db.ref("userList/"+id).remove();
 }
 
-/* ================= LOGOUT ================= */
+function resetDevice(id,name){
+  if(confirm(`Reset device ${name}?`))
+    db.ref("userList/"+id).update({deviceId:null,lastLogin:null});
+}
+
 function logout(){
   location.reload();
 }
