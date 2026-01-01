@@ -23,7 +23,6 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
 .danger{background:#e53935}
 .secondary{background:#546e7a}
 .hidden{display:none}
-.small{font-size:12px;color:#666}
 .flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .badge{background:#e8f1ff;color:#1e88e5;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600}
 .welcome{
@@ -32,6 +31,7 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
   padding:12px 15px;
   border-radius:6px;
   margin:15px 0;
+  font-size:14px;
 }
 </style>
 </head>
@@ -42,15 +42,8 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
 <div id="loginWrap" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
   <div class="card" style="max-width:380px;width:100%">
     <h2 style="text-align:center">🔐 Admin Login</h2>
-    <input
-      id="pin"
-      type="password"
-      inputmode="numeric"
-      maxlength="6"
-      placeholder="Masukkan PIN Admin (6 digit)"
-      oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-      style="width:100%;margin-bottom:12px"
-    >
+    <input id="pin" type="password" maxlength="6" placeholder="Masukkan PIN Admin (6 digit)"
+      oninput="this.value=this.value.replace(/[^0-9]/g,'')" style="width:100%;margin-bottom:12px">
     <button class="primary" style="width:100%" onclick="loginAdmin()">LOGIN</button>
   </div>
 </div>
@@ -67,10 +60,11 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
     </div>
 
     <h3>User Management</h3>
+
     <div class="flex">
       <input id="u" placeholder="Username">
       <input id="s" placeholder="Store ID">
-      <input id="e" type="number" min="1" placeholder="Masa aktif (hari)">
+      <input id="days" type="number" min="1" placeholder="Masa aktif (hari)">
       <button class="success" onclick="addUser()">Tambah</button>
     </div>
 
@@ -93,12 +87,10 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
     </table>
 
     <button class="danger" style="margin-top:15px" onclick="logout()">Logout</button>
-
   </div>
 </div>
 
 <script>
-/* ===== FIREBASE ===== */
 firebase.initializeApp({
   apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
   authDomain: "server-laporan.firebaseapp.com",
@@ -106,54 +98,43 @@ firebase.initializeApp({
   projectId: "server-laporan"
 });
 const db = firebase.database();
-
-/* ===== CONFIG ===== */
 const ADMIN_PIN = "500000";
 let USERS = {};
 
-/* ===== LOGIN ===== */
 function loginAdmin(){
   const pin = document.getElementById("pin").value;
   if(pin.length !== 6) return alert("PIN harus 6 digit");
   if(pin !== ADMIN_PIN) return alert("PIN salah");
 
-  document.getElementById("loginWrap").classList.add("hidden");
-  document.getElementById("panel").classList.remove("hidden");
+  document.getElementById("loginWrap").style.display="none";
+  const panel=document.getElementById("panel");
+  panel.classList.remove("hidden");
+  panel.style.display="block";
+
   loadUsers();
 }
 
-/* ===== DATE HELPER ===== */
-function calcExpired(days){
-  const d = new Date();
-  d.setDate(d.getDate() + parseInt(days));
-  return d.toISOString().slice(0,10);
-}
-
-/* ===== LOAD USERS ===== */
 function loadUsers(){
   db.ref("userList").on("value",snap=>{
-    USERS = snap.val() || {};
-    document.getElementById("total").innerText = Object.keys(USERS).length;
+    USERS=snap.val()||{};
+    document.getElementById("total").innerText=Object.keys(USERS).length;
     renderTable();
   });
 }
 
-/* ===== RENDER TABLE ===== */
 function renderTable(){
   const q=document.getElementById("search").value.toLowerCase();
   const tbody=document.getElementById("list");
   tbody.innerHTML="";
-
   Object.keys(USERS).forEach(id=>{
     const u=USERS[id];
     if(q && !u.username.toLowerCase().includes(q) && !u.storeId.toLowerCase().includes(q)) return;
-
     tbody.innerHTML+=`
     <tr>
       <td>${u.username}</td>
       <td>${u.storeId}</td>
       <td>${u.expired}</td>
-      <td>${u.deviceId ? "🔒 Terkunci" : "🟢 Bebas"}</td>
+      <td>${u.deviceId?"🔒 Terkunci":"🟢 Bebas"}</td>
       <td>
         <button class="warning" onclick="editUser('${id}')">Edit</button>
         <button class="secondary" onclick="resetDevice('${id}','${u.username}')">Reset</button>
@@ -163,33 +144,27 @@ function renderTable(){
   });
 }
 
-/* ===== CRUD ===== */
 function addUser(){
-  const u=document.getElementById("u").value.trim();
-  const s=document.getElementById("s").value.trim();
-  const days=document.getElementById("e").value;
+  const u=document.getElementById("u").value;
+  const s=document.getElementById("s").value;
+  const d=parseInt(document.getElementById("days").value);
+  if(!u||!s||!d) return alert("Lengkapi data");
 
-  if(!u||!s||!days) return alert("Lengkapi data");
-  if(days<=0) return alert("Masa aktif harus > 0 hari");
+  const exp=new Date();
+  exp.setDate(exp.getDate()+d);
+  const expired=exp.toISOString().split("T")[0];
 
-  db.ref("userList").push({
-    username:u,
-    storeId:s,
-    expired:calcExpired(days)
-  });
-
+  db.ref("userList").push({username:u,storeId:s,expired});
   document.getElementById("u").value="";
   document.getElementById("s").value="";
-  document.getElementById("e").value="";
+  document.getElementById("days").value="";
 }
 
 function editUser(id){
-  const days=prompt("Tambah masa aktif (hari):");
-  if(!days||days<=0) return;
-
-  const old=new Date(USERS[id].expired);
-  old.setDate(old.getDate()+parseInt(days));
-  db.ref("userList/"+id).update({expired:old.toISOString().slice(0,10)});
+  const u=prompt("Username baru");
+  const s=prompt("Store ID baru");
+  const e=prompt("Expired (YYYY-MM-DD)");
+  if(u&&s&&e) db.ref("userList/"+id).update({username:u,storeId:s,expired:e});
 }
 
 function delUser(id){
@@ -197,8 +172,8 @@ function delUser(id){
 }
 
 function resetDevice(id,name){
-  if(confirm(`Reset device ${name}?`))
-    db.ref("userList/"+id).update({deviceId:null,lastLogin:null});
+  if(confirm("Reset device "+name+"?"))
+    db.ref("userList/"+id).update({deviceId:null});
 }
 
 function logout(){
