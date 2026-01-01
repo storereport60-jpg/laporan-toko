@@ -32,19 +32,16 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
   padding:12px 15px;
   border-radius:6px;
   margin:15px 0;
-  font-size:14px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- ================= LOGIN ADMIN ================= -->
+<!-- LOGIN ADMIN -->
 <div id="loginWrap" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
   <div class="card" style="max-width:380px;width:100%">
-
     <h2 style="text-align:center">🔐 Admin Login</h2>
-
     <input
       id="pin"
       type="password"
@@ -54,60 +51,54 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
       oninput="this.value=this.value.replace(/[^0-9]/g,'')"
       style="width:100%;margin-bottom:12px"
     >
-
-    <button class="primary" style="width:100%" onclick="loginAdmin()">
-      LOGIN
-    </button>
-
+    <button class="primary" style="width:100%" onclick="loginAdmin()">LOGIN</button>
   </div>
 </div>
 
-<!-- ================= PANEL ADMIN ================= -->
-<div id="panel" class="hidden">
-  <div class="container">
-    <div class="card" style="margin:30px">
+<!-- PANEL ADMIN -->
+<div id="panel" class="container hidden">
+  <div class="card" style="margin:30px">
 
-      <h2>Administrator Area</h2>
+    <h2>Administrator Area</h2>
 
-      <div class="welcome">
-        👋 <strong>Selamat datang Pak Imron</strong><br>
-        Semoga hari Anda menyenangkan dan seluruh pekerjaan berjalan lancar.
-      </div>
-
-      <h3>User Management</h3>
-      <div class="flex">
-        <input id="u" placeholder="Username">
-        <input id="s" placeholder="Store ID">
-        <input id="e" type="date">
-        <button class="success" onclick="addUser()">Tambah</button>
-      </div>
-
-      <div class="flex" style="margin-top:20px">
-        <input id="search" placeholder="🔎 Cari username / store ID" oninput="renderTable()">
-        <span class="badge">👥 Total User: <span id="total">0</span></span>
-      </div>
-
-      <table style="margin-top:10px">
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>Store</th>
-            <th>Expired</th>
-            <th>Device</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="list"></tbody>
-      </table>
-
-      <button class="danger" style="margin-top:15px" onclick="logout()">Logout</button>
-
+    <div class="welcome">
+      👋 <strong>Selamat datang Pak Imron</strong><br>
+      Semoga hari Anda menyenangkan dan seluruh pekerjaan berjalan lancar.
     </div>
+
+    <h3>User Management</h3>
+    <div class="flex">
+      <input id="u" placeholder="Username">
+      <input id="s" placeholder="Store ID">
+      <input id="e" type="number" min="1" placeholder="Masa aktif (hari)">
+      <button class="success" onclick="addUser()">Tambah</button>
+    </div>
+
+    <div class="flex" style="margin-top:20px">
+      <input id="search" placeholder="🔎 Cari username / store ID" oninput="renderTable()">
+      <span class="badge">👥 Total User: <span id="total">0</span></span>
+    </div>
+
+    <table style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Store</th>
+          <th>Expired</th>
+          <th>Device</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+
+    <button class="danger" style="margin-top:15px" onclick="logout()">Logout</button>
+
   </div>
 </div>
 
 <script>
-/* ================= FIREBASE ================= */
+/* ===== FIREBASE ===== */
 firebase.initializeApp({
   apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
   authDomain: "server-laporan.firebaseapp.com",
@@ -116,72 +107,76 @@ firebase.initializeApp({
 });
 const db = firebase.database();
 
-/* ================= CONFIG ================= */
+/* ===== CONFIG ===== */
 const ADMIN_PIN = "500000";
 let USERS = {};
 
-/* ================= LOGIN ================= */
+/* ===== LOGIN ===== */
 function loginAdmin(){
   const pin = document.getElementById("pin").value;
+  if(pin.length !== 6) return alert("PIN harus 6 digit");
+  if(pin !== ADMIN_PIN) return alert("PIN salah");
 
-  if(pin.length !== 6){
-    alert("PIN harus 6 digit");
-    return;
-  }
-  if(pin !== ADMIN_PIN){
-    alert("PIN salah");
-    return;
-  }
-
-  // 🔥 HILANGKAN LOGIN TOTAL
-  document.getElementById("loginWrap").style.display = "none";
+  document.getElementById("loginWrap").classList.add("hidden");
   document.getElementById("panel").classList.remove("hidden");
-
   loadUsers();
 }
 
-/* ================= LOAD USERS ================= */
+/* ===== DATE HELPER ===== */
+function calcExpired(days){
+  const d = new Date();
+  d.setDate(d.getDate() + parseInt(days));
+  return d.toISOString().slice(0,10);
+}
+
+/* ===== LOAD USERS ===== */
 function loadUsers(){
-  db.ref("userList").on("value", snap=>{
+  db.ref("userList").on("value",snap=>{
     USERS = snap.val() || {};
     document.getElementById("total").innerText = Object.keys(USERS).length;
     renderTable();
   });
 }
 
-/* ================= RENDER TABLE ================= */
+/* ===== RENDER TABLE ===== */
 function renderTable(){
-  const q = document.getElementById("search").value.toLowerCase();
-  const tbody = document.getElementById("list");
-  tbody.innerHTML = "";
+  const q=document.getElementById("search").value.toLowerCase();
+  const tbody=document.getElementById("list");
+  tbody.innerHTML="";
 
   Object.keys(USERS).forEach(id=>{
-    const u = USERS[id];
+    const u=USERS[id];
     if(q && !u.username.toLowerCase().includes(q) && !u.storeId.toLowerCase().includes(q)) return;
 
-    tbody.innerHTML += `
-      <tr>
-        <td>${u.username}</td>
-        <td>${u.storeId}</td>
-        <td>${u.expired}</td>
-        <td>${u.deviceId ? "🔒 Terkunci" : "🟢 Bebas"}</td>
-        <td>
-          <button class="warning" onclick="editUser('${id}')">Edit</button>
-          <button class="secondary" onclick="resetDevice('${id}','${u.username}')">Reset</button>
-          <button class="danger" onclick="delUser('${id}')">Hapus</button>
-        </td>
-      </tr>`;
+    tbody.innerHTML+=`
+    <tr>
+      <td>${u.username}</td>
+      <td>${u.storeId}</td>
+      <td>${u.expired}</td>
+      <td>${u.deviceId ? "🔒 Terkunci" : "🟢 Bebas"}</td>
+      <td>
+        <button class="warning" onclick="editUser('${id}')">Edit</button>
+        <button class="secondary" onclick="resetDevice('${id}','${u.username}')">Reset</button>
+        <button class="danger" onclick="delUser('${id}')">Hapus</button>
+      </td>
+    </tr>`;
   });
 }
 
-/* ================= CRUD ================= */
+/* ===== CRUD ===== */
 function addUser(){
-  const u = document.getElementById("u").value;
-  const s = document.getElementById("s").value;
-  const e = document.getElementById("e").value;
-  if(!u || !s || !e) return alert("Lengkapi data");
+  const u=document.getElementById("u").value.trim();
+  const s=document.getElementById("s").value.trim();
+  const days=document.getElementById("e").value;
 
-  db.ref("userList").push({ username:u, storeId:s, expired:e });
+  if(!u||!s||!days) return alert("Lengkapi data");
+  if(days<=0) return alert("Masa aktif harus > 0 hari");
+
+  db.ref("userList").push({
+    username:u,
+    storeId:s,
+    expired:calcExpired(days)
+  });
 
   document.getElementById("u").value="";
   document.getElementById("s").value="";
@@ -189,24 +184,23 @@ function addUser(){
 }
 
 function editUser(id){
-  const u = prompt("Username baru");
-  const s = prompt("Store ID baru");
-  const e = prompt("Expired (YYYY-MM-DD)");
-  if(u && s && e)
-    db.ref("userList/"+id).update({ username:u, storeId:s, expired:e });
+  const days=prompt("Tambah masa aktif (hari):");
+  if(!days||days<=0) return;
+
+  const old=new Date(USERS[id].expired);
+  old.setDate(old.getDate()+parseInt(days));
+  db.ref("userList/"+id).update({expired:old.toISOString().slice(0,10)});
 }
 
 function delUser(id){
-  if(confirm("Hapus user ini?"))
-    db.ref("userList/"+id).remove();
+  if(confirm("Hapus user ini?")) db.ref("userList/"+id).remove();
 }
 
 function resetDevice(id,name){
   if(confirm(`Reset device ${name}?`))
-    db.ref("userList/"+id).update({ deviceId:null, lastLogin:null });
+    db.ref("userList/"+id).update({deviceId:null,lastLogin:null});
 }
 
-/* ================= LOGOUT ================= */
 function logout(){
   location.reload();
 }
