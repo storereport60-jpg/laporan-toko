@@ -2,191 +2,231 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel - User Manager</title>
+<title>Sistem Laporan Toko</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- React -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <style>
-body{font-family:Arial;background:#eef2f6;margin:0}
-.card{background:#fff;border-radius:8px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
-.container{max-width:1200px;margin:auto}
-table{width:100%;border-collapse:collapse}
-th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left;font-size:14px}
-th{background:#f5f5f5}
-input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
-button{cursor:pointer;border:none;color:#fff;font-weight:600}
-.primary{background:#1e88e5}
-.success{background:#43a047}
-.warning{background:#fb8c00}
-.danger{background:#e53935}
-.secondary{background:#546e7a}
-.hidden{display:none}
-.small{font-size:12px;color:#666}
-.flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.badge{background:#e8f1ff;color:#1e88e5;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600}
-.welcome{
-  background:#f1f8ff;
-  border-left:5px solid #1e88e5;
-  padding:12px 15px;
-  border-radius:6px;
-  margin:15px 0;
-  font-size:14px;
-}
+body{margin:0;font-family:"Segoe UI",Arial;background:#f4f6fb}
+.center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.container{max-width:1200px;margin:20px auto;padding:0 15px}
+.card{background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.login{max-width:420px;width:100%}
+.login h1{text-align:center;margin-bottom:5px}
+.login p{text-align:center;color:#64748b;margin-bottom:25px}
+.form-group{margin-bottom:18px}
+.form-group label{font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px}
+.form-group input{width:100%;padding:14px;font-size:15px;border-radius:12px;border:1px solid #cbd5e1}
+.form-group input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.15)}
+button{cursor:pointer;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:600;color:#fff}
+.primary{background:#2563eb}
+.primary:hover{background:#1d4ed8}
+.secondary{background:#475569}
+.success{background:#16a34a}
+.warning{background:#f59e0b}
+.danger{background:#dc2626}
+.refresh{background:#0d9488}
+.header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{background:#e0f2fe;color:#0369a1;padding:6px 12px;border-radius:20px;font-size:13px}
+.notice{background:#fff7ed;border-left:5px solid #fb923c;padding:12px;border-radius:8px;margin:15px 0}
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.actions{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap}
+.iframe-box{position:relative;margin-top:20px}
+iframe{width:100%;height:78vh;border:none;border-radius:16px}
+.loading{position:absolute;inset:0;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#2563eb;z-index:20}
+.footer{text-align:center;margin:15px 0;font-size:13px;color:#64748b}
+/* Center tombol login */
+.login button{width:100%;display:block;margin-top:10px}
 </style>
 </head>
 
 <body>
-
-<!-- LOGIN ADMIN -->
-<div id="loginWrap" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
-  <div class="card" style="max-width:380px;width:100%">
-
-    <h2 style="text-align:center">🔐 Admin Login</h2>
-
-    <input
-      id="pin"
-      type="password"
-      inputmode="numeric"
-      maxlength="6"
-      placeholder="Masukkan PIN Admin (6 digit)"
-      oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-      style="width:100%;margin-bottom:12px"
-    >
-
-    <button class="primary" style="width:100%" onclick="loginAdmin()">
-      LOGIN
-    </button>
-
-  </div>
-</div>
-
-<!-- PANEL ADMIN -->
-<div id="panel" class="container hidden">
-  <div class="card" style="margin:30px">
-
-    <h2>Administrator Area</h2>
-
-    <div class="welcome">
-      👋 <strong>Selamat datang Pak Imron</strong><br>
-      Semoga hari Anda menyenangkan dan seluruh pekerjaan berjalan lancar.
-    </div>
-
-    <h3>User Management</h3>
-    <div class="flex">
-      <input id="u" placeholder="Username">
-      <input id="s" placeholder="Store ID">
-      <input id="e" type="date">
-      <button class="success" onclick="addUser()">Tambah</button>
-    </div>
-
-    <div class="flex" style="margin-top:20px">
-      <input id="search" placeholder="🔎 Cari username / store ID" oninput="renderTable()">
-      <span class="badge">👥 Total User: <span id="total">0</span></span>
-    </div>
-
-    <table style="margin-top:10px">
-      <thead>
-        <tr>
-          <th>Username</th>
-          <th>Store</th>
-          <th>Expired</th>
-          <th>Device</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="list"></tbody>
-    </table>
-
-    <button class="danger" style="margin-top:15px" onclick="logout()">Logout</button>
-
-  </div>
-</div>
+<div id="root"></div>
 
 <script>
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
   authDomain: "server-laporan.firebaseapp.com",
   databaseURL: "https://server-laporan-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "server-laporan"
 });
-const db = firebase.database();
+const rtdb = firebase.database();
 
-const ADMIN_PIN = "500000";
-let USERS = {};
+/* ================= UTIL ================= */
+const { useState } = React;
+const fmt = d => String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
+const today = () => fmt(new Date());
 
-function loginAdmin(){
-  const pin = document.getElementById("pin").value;
-  if(pin.length !== 6) return alert("PIN harus 6 digit");
-  if(pin !== ADMIN_PIN) return alert("PIN salah");
+const deviceId = () => {
+  let id = localStorage.getItem("DEVICE_ID");
+  if(!id){
+    id = crypto.randomUUID();
+    localStorage.setItem("DEVICE_ID", id);
+  }
+  return id;
+};
 
-  document.getElementById("loginWrap").classList.add("hidden");
-  document.getElementById("panel").classList.remove("hidden");
-  loadUsers();
+const greeting = () => {
+  const h = new Date().getHours();
+  if(h < 11) return "Selamat Pagi";
+  if(h < 15) return "Selamat Siang";
+  if(h < 18) return "Selamat Sore";
+  return "Selamat Malam";
+};
+
+/* ================= APP ================= */
+function App(){
+  const [user,setUser] = useState(null);
+  const [username,setUsername] = useState("");
+  const [menu,setMenu] = useState("");
+  const [date,setDate] = useState("");
+  const [start,setStart] = useState("");
+  const [end,setEnd] = useState("");
+  const [src,setSrc] = useState("");
+  const [loading,setLoading] = useState(false);
+
+  /* ===== LOGIN ===== */
+  const login = async () => {
+    if(!username) return alert("Username wajib diisi");
+    const snap = await rtdb.ref("userList").once("value");
+    let found=null,key=null;
+    Object.entries(snap.val()||{}).forEach(([k,u])=>{
+      if(u.username?.toUpperCase() === username){
+        found=u; key=k;
+      }
+    });
+    if(!found) return alert("User tidak terdaftar");
+    if(new Date(found.expired) < new Date()) return alert("Akun sudah expired");
+
+    const myDevice = deviceId();
+    if(found.deviceId && found.deviceId !== myDevice)
+      return alert("Akun sudah digunakan di device lain");
+
+    if(!found.deviceId)
+      rtdb.ref("userList/"+key+"/deviceId").set(myDevice);
+
+    setUser(found);
+  };
+
+  /* ===== AUTO REPORT ===== */
+  const openAuto = (m) => {
+    setMenu(m); setDate(""); setStart(""); setEnd("");
+    let url="";
+    if(m==="last")
+      url = `https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_last_so_absolute_desc?storeId=${user.storeId}&dateSo=${today()}`;
+    if(m==="notmain")
+      url = `https://app.alfastore.co.id/prd/api/rpt/laporan/laporan_plu_tak_main_toko?storeId=${user.storeId}&dateTx=${today()}`;
+    if(m==="disc")
+      url = `https://app.alfastore.co.id/prd/api/rpt/laporan/rpt_plu_discontinue?storeId=${user.storeId}&dateSo=${today()}&filter_tag=All`;
+    setLoading(true);
+    setSrc(url+"&t="+Date.now());
+  };
+
+  /* ===== MANUAL ===== */
+  const loadManual = () => {
+    let url="";
+    if(menu==="adjust"){
+      if(!date) return alert("Pilih tanggal");
+      url = `https://app.alfastore.co.id/prd/api/rpt/laporan_so/csel_all_so_absolute_desc?storeId=${user.storeId}&dateSo=${date}`;
+    }
+    if(menu==="daily"){
+      if(!start || !end) return alert("Pilih periode");
+      url = `https://app.alfastore.co.id/prd/api/rpt/laporan/daily_performance?storeId=${user.storeId}&periode1=${start}&periode2=${end}`;
+    }
+    setLoading(true);
+    setSrc(url+"&t="+Date.now());
+  };
+
+  /* ===== LAPORAN 23–24 ===== */
+  const load2324 = () => {
+    if(!date) return alert("Pilih tanggal");
+    const url = `https://app.alfastore.co.id/prd/api/rpt/laporan/rep_gabungan_23_24?storeId=${user.storeId}&periode1=${date}`;
+    setLoading(true);
+    setSrc(url+"&t="+Date.now());
+  };
+
+  /* ===== LOGIN VIEW ===== */
+  if(!user){
+    return React.createElement("div",{className:"center"},
+      React.createElement("div",{className:"card login"},
+        React.createElement("h1",null,"Login Sistem"),
+        React.createElement("p",null,"Masukkan username terdaftar"),
+        React.createElement("div",{className:"form-group"},
+          React.createElement("label",null,"Username"),
+          React.createElement("input",{
+            value:username,
+            placeholder:"USERNAME",
+            onChange:e=>setUsername(e.target.value.toUpperCase()),
+            onKeyDown:e=>{ if(e.key==="Enter") login(); }
+          })
+        ),
+        React.createElement("button",{className:"primary",onClick:login},"Masuk")
+      )
+    );
+  }
+
+  /* ===== DASHBOARD ===== */
+  return React.createElement("div",{className:"container"},
+    React.createElement("div",{className:"card"},
+      React.createElement("div",{className:"header"},
+        React.createElement("h3",null,`${greeting()} ${user.username}`),
+        React.createElement("span",{className:"badge"},"Expired: "+user.expired)
+      ),
+
+      React.createElement("div",{className:"notice"},
+        "📢 Informasi & bantuan tersedia di grup WA."
+      ),
+
+      React.createElement("div",{className:"menu"},
+        React.createElement("button",{className:"primary",onClick:()=>openAuto("last")},"Selisih Terakhir"),
+        React.createElement("button",{className:"secondary",onClick:()=>{setMenu("adjust");setSrc("");}},"SO Adjust"),
+        React.createElement("button",{className:"danger",onClick:()=>{setMenu("daily");setSrc("");}},"Daily Performance"),
+        React.createElement("button",{className:"success",onClick:()=>openAuto("notmain")},"PLU Tidak Main"),
+        React.createElement("button",{className:"warning",onClick:()=>openAuto("disc")},"Discontinue"),
+        React.createElement("button",{className:"warning",onClick:()=>{setMenu("lap2324");setSrc("");}},"📊 Laporan 23–24")
+      ),
+
+      menu==="adjust" && React.createElement("div",{className:"actions"},
+        React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+        React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
+      ),
+
+      menu==="daily" && React.createElement("div",{className:"actions"},
+        React.createElement("input",{type:"date",onChange:e=>setStart(fmt(new Date(e.target.value)))}),
+        React.createElement("input",{type:"date",onChange:e=>setEnd(fmt(new Date(e.target.value)))}),
+        React.createElement("button",{className:"primary",onClick:loadManual},"Tampilkan")
+      ),
+
+      menu==="lap2324" && React.createElement("div",{className:"actions"},
+        React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
+        React.createElement("button",{className:"primary",onClick:load2324},"Tampilkan")
+      ),
+
+      src && React.createElement("div",{className:"actions"},
+        React.createElement("button",{className:"refresh",onClick:()=>{setLoading(true);setSrc(src+"&r="+Date.now());}},"🔄 Refresh"),
+        React.createElement("button",{className:"danger",onClick:()=>{setUser(null);setSrc("");}},"Logout")
+      )
+    ),
+
+    src && React.createElement("div",{className:"iframe-box"},
+      loading && React.createElement("div",{className:"loading"},"⏳ Memuat laporan..."),
+      React.createElement("iframe",{src, onLoad:()=>setLoading(false)})
+    ),
+
+    React.createElement("div",{className:"footer"},"© "+new Date().getFullYear()+" Sistem Laporan Toko")
+  );
 }
 
-function loadUsers(){
-  db.ref("userList").on("value",snap=>{
-    USERS = snap.val() || {};
-    document.getElementById("total").innerText = Object.keys(USERS).length;
-    renderTable();
-  });
-}
-
-function renderTable(){
-  const q=document.getElementById("search").value.toLowerCase();
-  const tbody=document.getElementById("list");
-  tbody.innerHTML="";
-
-  Object.keys(USERS).forEach(id=>{
-    const u=USERS[id];
-    if(q && !u.username.toLowerCase().includes(q) && !u.storeId.toLowerCase().includes(q)) return;
-
-    tbody.innerHTML+=`
-    <tr>
-      <td>${u.username}</td>
-      <td>${u.storeId}</td>
-      <td>${u.expired}</td>
-      <td>${u.deviceId ? "🔒 Terkunci" : "🟢 Bebas"}</td>
-      <td>
-        <button class="warning" onclick="editUser('${id}')">Edit</button>
-        <button class="secondary" onclick="resetDevice('${id}','${u.username}')">Reset</button>
-        <button class="danger" onclick="delUser('${id}')">Hapus</button>
-      </td>
-    </tr>`;
-  });
-}
-
-function addUser(){
-  const u=document.getElementById("u").value;
-  const s=document.getElementById("s").value;
-  const e=document.getElementById("e").value;
-  if(!u||!s||!e) return alert("Lengkapi data");
-  db.ref("userList").push({username:u,storeId:s,expired:e});
-  u.value=s.value=e.value="";
-}
-
-function editUser(id){
-  const u=prompt("Username baru");
-  const s=prompt("Store ID baru");
-  const e=prompt("Expired (YYYY-MM-DD)");
-  if(u&&s&&e) db.ref("userList/"+id).update({username:u,storeId:s,expired:e});
-}
-
-function delUser(id){
-  if(confirm("Hapus user ini?")) db.ref("userList/"+id).remove();
-}
-
-function resetDevice(id,name){
-  if(confirm(`Reset device ${name}?`))
-    db.ref("userList/"+id).update({deviceId:null,lastLogin:null});
-}
-
-function logout(){
-  location.reload();
-}
+ReactDOM.createRoot(document.getElementById("root"))
+  .render(React.createElement(App));
 </script>
-
 </body>
 </html>
