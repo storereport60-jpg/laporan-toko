@@ -175,7 +175,15 @@ const {useState}=React;
 
 const fmt=d=>String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear();
 const today=()=>fmt(new Date());
-const deviceId=()=>navigator.userAgent+"-"+screen.width+"x"+screen.height;
+const deviceId = () => {
+  let id = localStorage.getItem("DEVICE_ID");
+  if(!id){
+    id = crypto.randomUUID();
+    localStorage.setItem("DEVICE_ID", id);
+  }
+  return id;
+};
+
 
 const greeting=()=>{
  const h=new Date().getHours();
