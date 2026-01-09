@@ -21,7 +21,6 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
 .success{background:#43a047}
 .warning{background:#fb8c00}
 .danger{background:#e53935}
-.secondary{background:#546e7a}
 .hidden{display:none}
 .flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .badge{background:#e8f1ff;color:#1e88e5;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600}
@@ -42,8 +41,10 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
 <div id="loginWrap" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
   <div class="card" style="max-width:380px;width:100%">
     <h2 style="text-align:center">🔐 Admin Login</h2>
-    <input id="pin" type="password" maxlength="6" placeholder="Masukkan PIN Admin (6 digit)"
-      oninput="this.value=this.value.replace(/[^0-9]/g,'')" style="width:100%;margin-bottom:12px">
+    <input id="pin" type="password" maxlength="6"
+      placeholder="Masukkan PIN Admin (6 digit)"
+      oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+      style="width:100%;margin-bottom:12px">
     <button class="primary" style="width:100%" onclick="loginAdmin()">LOGIN</button>
   </div>
 </div>
@@ -62,8 +63,8 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
     <h3>User Management</h3>
 
     <div class="flex">
-      <input id="u" placeholder="Username">
-      <input id="s" placeholder="Store ID">
+      <input id="u" placeholder="USERNAME" oninput="this.value=this.value.toUpperCase()">
+      <input id="s" placeholder="STORE ID" oninput="this.value=this.value.toUpperCase()">
       <input id="days" type="number" min="1" placeholder="Masa aktif (hari)">
       <button class="success" onclick="addUser()">Tambah</button>
     </div>
@@ -79,7 +80,6 @@ button{cursor:pointer;border:none;color:#fff;font-weight:600}
           <th>Username</th>
           <th>Store</th>
           <th>Expired</th>
-          <th>Device</th>
           <th>Aksi</th>
         </tr>
       </thead>
@@ -102,15 +102,14 @@ const ADMIN_PIN = "500000";
 let USERS = {};
 
 function loginAdmin(){
-  const pin = document.getElementById("pin").value;
-  if(pin.length !== 6) return alert("PIN harus 6 digit");
-  if(pin !== ADMIN_PIN) return alert("PIN salah");
+  const pin=document.getElementById("pin").value;
+  if(pin.length!==6) return alert("PIN harus 6 digit");
+  if(pin!==ADMIN_PIN) return alert("PIN salah");
 
   document.getElementById("loginWrap").style.display="none";
   const panel=document.getElementById("panel");
   panel.classList.remove("hidden");
   panel.style.display="block";
-
   loadUsers();
 }
 
@@ -134,10 +133,8 @@ function renderTable(){
       <td>${u.username}</td>
       <td>${u.storeId}</td>
       <td>${u.expired}</td>
-      <td>${u.deviceId?"🔒 Terkunci":"🟢 Bebas"}</td>
       <td>
         <button class="warning" onclick="editUser('${id}')">Edit</button>
-        <button class="secondary" onclick="resetDevice('${id}','${u.username}')">Reset</button>
         <button class="danger" onclick="delUser('${id}')">Hapus</button>
       </td>
     </tr>`;
@@ -152,33 +149,36 @@ function addUser(){
 
   const exp=new Date();
   exp.setDate(exp.getDate()+d);
-  const expired=exp.toISOString().split("T")[0];
+  db.ref("userList").push({
+    username:u,
+    storeId:s,
+    expired:exp.toISOString().split("T")[0]
+  });
 
-  db.ref("userList").push({username:u,storeId:s,expired});
   document.getElementById("u").value="";
   document.getElementById("s").value="";
   document.getElementById("days").value="";
 }
 
 function editUser(id){
-  const u=prompt("Username baru");
-  const s=prompt("Store ID baru");
-  const e=prompt("Expired (YYYY-MM-DD)");
-  if(u&&s&&e) db.ref("userList/"+id).update({username:u,storeId:s,expired:e});
+  const cur=USERS[id];
+  const u=prompt("Username:",cur.username);
+  const s=prompt("Store ID:",cur.storeId);
+  const e=prompt("Expired (YYYY-MM-DD):",cur.expired);
+  if(u&&s&&e){
+    db.ref("userList/"+id).update({
+      username:u.toUpperCase(),
+      storeId:s.toUpperCase(),
+      expired:e
+    });
+  }
 }
 
 function delUser(id){
   if(confirm("Hapus user ini?")) db.ref("userList/"+id).remove();
 }
 
-function resetDevice(id,name){
-  if(confirm("Reset device "+name+"?"))
-    db.ref("userList/"+id).update({deviceId:null});
-}
-
-function logout(){
-  location.reload();
-}
+function logout(){location.reload()}
 </script>
 
 </body>
