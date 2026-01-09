@@ -12,40 +12,149 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <style>
-body{margin:0;font-family:"Segoe UI",Arial;background:#f4f6fb}
+:root{
+  --primary:#2563eb;
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:"Inter","Segoe UI",Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* LAYOUT */
 .center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .container{max-width:1200px;margin:20px auto;padding:0 15px}
-.card{background:#fff;border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.card{
+  background:var(--card);
+  border-radius:20px;
+  padding:28px;
+  box-shadow:0 12px 35px rgba(0,0,0,.08);
+}
+
+/* LOGIN */
 .login{max-width:420px;width:100%}
-.login h1{text-align:center;margin-bottom:5px}
-.login p{text-align:center;color:#64748b;margin-bottom:25px}
+.login h1{text-align:center;margin:0 0 6px}
+.login p{text-align:center;color:var(--muted);margin-bottom:25px}
 .form-group{margin-bottom:18px}
-.form-group label{font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px}
+.form-group label{
+  font-size:13px;
+  font-weight:600;
+  color:#475569;
+  display:block;
+  margin-bottom:6px
+}
 .form-group input{
   width:100%;
-  padding:14px;
-  font-size:16px;
-  border-radius:12px;
+  padding:15px;
+  font-size:17px;
+  border-radius:14px;
   border:1px solid #cbd5e1;
   text-align:center;
   letter-spacing:4px;
   text-transform:uppercase;
 }
-button{cursor:pointer;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:600;color:#fff}
+.form-group input:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(37,99,235,.15);
+}
+
+/* BUTTON */
+button{
+  cursor:pointer;
+  border:none;
+  border-radius:14px;
+  padding:14px;
+  font-size:15px;
+  font-weight:600;
+  color:#fff;
+}
 .primary{background:#2563eb}
 .secondary{background:#475569}
 .success{background:#16a34a}
 .warning{background:#f59e0b}
 .danger{background:#dc2626}
-.header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.badge{background:#e0f2fe;color:#0369a1;padding:6px 12px;border-radius:20px;font-size:13px}
-.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.actions{margin-top:15px;display:flex;gap:10px;flex-wrap:wrap}
-.iframe-box{position:relative;margin-top:20px}
-iframe{width:100%;height:78vh;border:none;border-radius:16px}
-.loading{position:absolute;inset:0;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#2563eb}
-.footer{text-align:center;margin:15px 0;font-size:13px;color:#64748b}
+.refresh{background:#0d9488}
+button:active{transform:scale(.98)}
+
 .login button{width:100%;margin-top:10px}
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+  flex-wrap:wrap
+}
+.badge{
+  background:#e0f2fe;
+  color:#0369a1;
+  padding:6px 14px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:600
+}
+
+/* MENU */
+.menu{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:12px;
+  margin-top:20px
+}
+.menu button{width:100%}
+
+/* ACTIONS */
+.actions{
+  margin-top:15px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap
+}
+.actions input{
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #cbd5e1;
+  font-size:14px
+}
+
+/* IFRAME */
+.iframe-box{position:relative;margin-top:20px}
+iframe{
+  width:100%;
+  height:78vh;
+  border:none;
+  border-radius:18px;
+  background:#fff
+}
+.loading{
+  position:absolute;
+  inset:0;
+  background:rgba(255,255,255,.9);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  font-weight:600;
+  color:var(--primary);
+  z-index:10
+}
+
+/* FOOTER */
+.footer{
+  text-align:center;
+  margin:18px 0;
+  font-size:13px;
+  color:var(--muted)
+}
 </style>
 </head>
 
@@ -66,7 +175,7 @@ const today = () => fmt(new Date());
 
 const greeting = () => {
   const h=new Date().getHours();
-  if(h<11) return "Selamat pagi, semoga aktivitas Anda berjalan lancar";
+  if(h<11) return "Selamat pagi, semoga aktivitas Anda lancar";
   if(h<15) return "Selamat siang, semoga pekerjaan Anda dimudahkan";
   if(h<18) return "Selamat sore, terima kasih atas kerja keras Anda";
   return "Selamat malam, semoga hari Anda menyenangkan";
@@ -94,7 +203,6 @@ function App(){
 
     if(!found) return alert("User tidak terdaftar");
     if(new Date(found.expired)<new Date()) return alert("Akun sudah expired");
-
     setUser(found);
   };
 
@@ -137,7 +245,7 @@ function App(){
         React.createElement("h1",null,"Login Sistem"),
         React.createElement("p",null,"Masukkan kode user Anda"),
         React.createElement("div",{className:"form-group"},
-          React.createElement("label",null,"Kode User (4 Karakter)"),
+          React.createElement("label",null,"Kode Toko (4 Karakter)"),
           React.createElement("input",{
             value:username,
             maxLength:4,
@@ -155,11 +263,14 @@ function App(){
   return React.createElement("div",{className:"container"},
     React.createElement("div",{className:"card"},
       React.createElement("div",{className:"header"},
-        React.createElement("h3",null,`${greeting()} 👋`),
+        React.createElement("div",null,
+          React.createElement("h3",null,`${greeting()} 👋`),
+          React.createElement("div",{style:{color:"#64748b",fontSize:"14px"}},"User: ",user.username)
+        ),
         React.createElement("span",{className:"badge"},"Expired: "+user.expired)
       ),
 
-      React.createElement("div",{className:"menu",style:{marginTop:"15px"}},
+      React.createElement("div",{className:"menu"},
         React.createElement("button",{className:"primary",onClick:()=>openAuto("last")},"Selisih Terakhir"),
         React.createElement("button",{className:"secondary",onClick:()=>{setMenu("adjust");setSrc("");}},"SO Adjust"),
         React.createElement("button",{className:"danger",onClick:()=>{setMenu("daily");setSrc("");}},"Daily Performance"),
@@ -182,6 +293,11 @@ function App(){
       menu==="lap2324" && React.createElement("div",{className:"actions"},
         React.createElement("input",{type:"date",onChange:e=>setDate(fmt(new Date(e.target.value)))}),
         React.createElement("button",{className:"primary",onClick:load2324},"Tampilkan")
+      ),
+
+      src && React.createElement("div",{className:"actions"},
+        React.createElement("button",{className:"refresh",onClick:()=>{setLoading(true);setSrc(src+"&r="+Date.now());}},"🔄 Refresh Laporan"),
+        React.createElement("button",{className:"danger",onClick:()=>{setUser(null);setSrc("");}},"Logout")
       )
     ),
 
