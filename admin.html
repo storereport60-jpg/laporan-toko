@@ -1,294 +1,185 @@
-<!DOCTYPE html><html lang="id">
+<!DOCTYPE html>
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pemberitahuan Sistem Laporan Toko</title>
-  <meta name="description" content="Pemberitahuan bahwa web sistem laporan toko tidak beroperasi. Akses melalui Telegram dengan menghubungi admin." />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0b1020;
-      --card: #121735;
-      --primary: #5b7cff;
-      --text: #e8ebff;
-      --muted: #a8b0ff;
-      --border: rgba(255,255,255,0.08);
-      --radius: 20px;
-    }
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(91,124,255,0.15), transparent 40%),
-        radial-gradient(1200px 600px at 110% 10%, rgba(91,124,255,0.12), transparent 40%),
-        linear-gradient(180deg, #0a0f1f 0%, #0b1020 100%);
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-    }.container {
-  width: 100%;
-  max-width: 980px;
-  margin: 0 auto;
+<meta charset="UTF-8">
+<title>Admin Panel - User Manager</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<style>
+body{font-family:Arial;background:#eef2f6;margin:0}
+.card{background:#fff;border-radius:8px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.container{max-width:1200px;margin:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left;font-size:14px}
+th{background:#f5f5f5}
+input,button{padding:8px;border-radius:6px;border:1px solid #ccc}
+button{cursor:pointer;border:none;color:#fff;font-weight:600}
+.primary{background:#1e88e5}
+.success{background:#43a047}
+.warning{background:#fb8c00}
+.danger{background:#e53935}
+.hidden{display:none}
+.flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.badge{background:#e8f1ff;color:#1e88e5;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600}
+.welcome{
+  background:#f1f8ff;
+  border-left:5px solid #1e88e5;
+  padding:12px 15px;
+  border-radius:6px;
+  margin:15px 0;
+  font-size:14px;
 }
-
-.card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)) , var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: 0 30px 80px rgba(0,0,0,.35);
-  padding: 40px 40px 32px;
-  position: relative;
-  overflow: hidden;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(91,124,255,0.12);
-  color: var(--muted);
-  border: 1px solid var(--border);
-  font-weight: 500;
-  font-size: 13px;
-}
-
-h1 {
-  font-size: clamp(28px, 4vw, 40px);
-  line-height: 1.15;
-  margin: 16px 0 8px;
-  letter-spacing: -0.02em;
-}
-
-p {
-  margin: 8px 0;
-  color: #cfd5ff;
-  line-height: 1.7;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1.2fr .8fr;
-  gap: 24px;
-  margin-top: 24px;
-}
-
-@media (max-width: 820px) {
-  .grid { grid-template-columns: 1fr; }
-}
-
-.panel {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px 20px 18px;
-}
-
-.panel h3 {
-  margin: 0 0 8px;
-  font-size: 16px;
-  color: #f2f4ff;
-  letter-spacing: -0.01em;
-}
-
-.steps {
-  list-style: none;
-  padding: 0;
-  margin: 12px 0 0;
-  display: grid;
-  gap: 10px;
-}
-
-.steps li {
-  display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px dashed var(--border);
-  background: rgba(255,255,255,0.02);
-}
-
-.num {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-weight: 600;
-  color: #0b1020;
-  background: linear-gradient(180deg, #b6c4ff, #8fa3ff);
-  box-shadow: 0 6px 14px rgba(91,124,255,0.35);
-  flex: 0 0 28px;
-}
-
-.cta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.btn {
-  appearance: none;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 16px;
-  background: rgba(255,255,255,0.04);
-  color: #fff;
-  cursor: pointer;
-  text-decoration: none;
-  font-weight: 600;
-  transition: transform .05s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
-}
-
-.btn.primary {
-  background: linear-gradient(180deg, #6c8bff, #5b7cff);
-  border-color: rgba(91,124,255,.6);
-  color: #0b1020;
-  box-shadow: 0 12px 30px rgba(91,124,255,.35);
-}
-
-.btn:hover { transform: translateY(-1px); }
-.btn:active { transform: translateY(0); box-shadow: none; }
-
-.note {
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: 10px;
-}
-
-.footer {
-  margin-top: 22px;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  color: var(--muted);
-  font-size: 12px;
-  flex-wrap: wrap;
-}
-
-.highlight {
-  color: #fff;
-  font-weight: 600;
-}
-
-.divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
-  margin: 18px 0;
-}
-
-.list {
-  margin: 8px 0 0;
-  padding-left: 18px;
-}
-
-.list li { margin: 6px 0; }
-
-  </style>
+</style>
 </head>
+
 <body>
-  <main class="container">
-    <section class="card" aria-labelledby="title">
-      <span class="badge">Pemberitahuan Resmi</span>
-      <h1 id="title">Sistem Laporan Toko (Web) Tidak Beroperasi</h1>
-      <p>
-        Kami informasikan bahwa <span class="highlight">web sistem laporan toko saat ini sudah tidak beroperasi</span>.
-        Untuk tetap dapat menggunakan aplikasi sistem laporan toko, silakan mengikuti panduan di bawah ini.
-      </p><div class="grid">
-    <div class="panel">
-      <h3>📱 Akses Melalui Telegram</h3>
-      <p>
-        Aplikasi sistem laporan toko <span class="highlight">sekarang dapat diakses melalui Telegram</span>.
-        Pastikan Anda memiliki akun Telegram yang aktif.
-      </p>
 
-      <div class="divider"></div>
+<!-- LOGIN ADMIN -->
+<div id="loginWrap" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
+  <div class="card" style="max-width:380px;width:100%">
+    <h2 style="text-align:center">🔐 Admin Login</h2>
+    <input id="pin" type="password" maxlength="6"
+      placeholder="Masukkan PIN Admin (6 digit)"
+      oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+      style="width:100%;margin-bottom:12px">
+    <button class="primary" style="width:100%" onclick="loginAdmin()">LOGIN</button>
+  </div>
+</div>
 
-      <h3>🧭 Cara Mengaktifkan Akses</h3>
-      <ol class="steps">
-        <li>
-          <div class="num">1</div>
-          <div>
-            <strong>Siapkan Telegram</strong>
-            <p>Unduh aplikasi Telegram dan pastikan akun Anda sudah login.</p>
-          </div>
-        </li>
-        <li>
-          <div class="num">2</div>
-          <div>
-            <strong>Dapatkan Telegram ID (angka)</strong>
-            <p>Telegram ID berbeda dengan <em>username</em>. Ikuti langkah di panel kanan untuk mengetahui ID Anda.</p>
-          </div>
-        </li>
-        <li>
-          <div class="num">3</div>
-          <div>
-            <strong>Hubungi Admin</strong>
-            <p>Kirimkan <strong>Telegram ID (angka)</strong> dan <strong>kode toko</strong> Anda ke admin melalui WhatsApp.</p>
-          </div>
-        </li>
-      </ol>
+<!-- PANEL ADMIN -->
+<div id="panel" class="container hidden">
+  <div class="card" style="margin:30px">
 
-      <div class="cta">
-        <a class="btn primary" href="https://wa.me/6287775798491" target="_blank" rel="noopener">
-          Chat Admin via WhatsApp
-        </a>
-        <a class="btn" href="https://t.me" target="_blank" rel="noopener">
-          Buka Telegram
-        </a>
-      </div>
-      <p class="note">Nomor admin: <strong>0877-7579-8491</strong></p>
+    <h2>Administrator Area</h2>
+
+    <div class="welcome">
+      👋 <strong>Selamat datang Pak Imron</strong><br>
+      Semoga hari Anda menyenangkan dan seluruh pekerjaan berjalan lancar.
     </div>
 
-    <aside class="panel">
-      <h3>🔎 Cara Mengetahui Telegram ID (Berupa Angka)</h3>
-      <p>Ikuti salah satu metode berikut:</p>
-      <ul class="list">
-        <li>
-          <strong>Metode 1 (Bot):</strong>
-          Buka Telegram, cari bot <em>@userinfobot</em>, lalu klik <em>Start</em>. Bot akan menampilkan <strong>Telegram ID (angka)</strong> Anda.
-        </li>
-        <li>
-          <strong>Metode 2 (Bot Alternatif):</strong>
-          Cari <em>@myidbot</em>, tekan <em>Start</em>, dan salin ID angka yang diberikan.
-        </li>
-        <li>
-          <strong>Catatan:</strong>
-          Jangan kirim <em>username</em> (contoh: <code>@namasaya</code>). Yang dibutuhkan adalah <strong>ID numerik</strong> (contoh: <code>123456789</code>).
-        </li>
-      </ul>
+    <h3>User Management</h3>
 
-      <div class="divider"></div>
+    <div class="flex">
+      <input id="u" placeholder="USERNAME" oninput="this.value=this.value.toUpperCase()">
+      <input id="s" placeholder="STORE ID" oninput="this.value=this.value.toUpperCase()">
+      <input id="days" type="number" min="1" placeholder="Masa aktif (hari)">
+      <button class="success" onclick="addUser()">Tambah</button>
+    </div>
 
-      <h3>📨 Format Pesan ke Admin</h3>
-      <p>Salin format berikut saat menghubungi admin:</p>
-      <div class="panel" style="margin-top:10px;">
-        <p style="margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px; color:#f2f4ff;">
-          Halo Admin,<br>
-          Saya ingin mengakses sistem laporan toko via Telegram.<br>
-          Telegram ID: <strong>123456789</strong><br>
-          Kode Toko: <strong>XXXX</strong>
-        </p>
-      </div>
-    </aside>
+    <div class="flex" style="margin-top:20px">
+      <input id="search" placeholder="🔎 Cari username / store ID" oninput="renderTable()">
+      <span class="badge">👥 Total User: <span id="total">0</span></span>
+    </div>
+
+    <table style="margin-top:10px">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Store</th>
+          <th>Expired</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+
+    <button class="danger" style="margin-top:15px" onclick="logout()">Logout</button>
   </div>
+</div>
 
-  <div class="footer">
-    <span>© <span id="year"></span> Sistem Laporan Toko</span>
-    <span>Dukungan: WhatsApp Admin</span>
-  </div>
-</section>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCld9VE6XdF-tbcv1E-gBZ2ACeJBklW-Go",
+  authDomain: "server-laporan.firebaseapp.com",
+  databaseURL: "https://server-laporan-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "server-laporan"
+});
+const db = firebase.database();
+const ADMIN_PIN = "500000";
+let USERS = {};
 
-  </main>  <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script></body>
+function loginAdmin(){
+  const pin=document.getElementById("pin").value;
+  if(pin.length!==6) return alert("PIN harus 6 digit");
+  if(pin!==ADMIN_PIN) return alert("PIN salah");
+
+  document.getElementById("loginWrap").style.display="none";
+  const panel=document.getElementById("panel");
+  panel.classList.remove("hidden");
+  panel.style.display="block";
+  loadUsers();
+}
+
+function loadUsers(){
+  db.ref("userList").on("value",snap=>{
+    USERS=snap.val()||{};
+    document.getElementById("total").innerText=Object.keys(USERS).length;
+    renderTable();
+  });
+}
+
+function renderTable(){
+  const q=document.getElementById("search").value.toLowerCase();
+  const tbody=document.getElementById("list");
+  tbody.innerHTML="";
+  Object.keys(USERS).forEach(id=>{
+    const u=USERS[id];
+    if(q && !u.username.toLowerCase().includes(q) && !u.storeId.toLowerCase().includes(q)) return;
+    tbody.innerHTML+=`
+    <tr>
+      <td>${u.username}</td>
+      <td>${u.storeId}</td>
+      <td>${u.expired}</td>
+      <td>
+        <button class="warning" onclick="editUser('${id}')">Edit</button>
+        <button class="danger" onclick="delUser('${id}')">Hapus</button>
+      </td>
+    </tr>`;
+  });
+}
+
+function addUser(){
+  const u=document.getElementById("u").value;
+  const s=document.getElementById("s").value;
+  const d=parseInt(document.getElementById("days").value);
+  if(!u||!s||!d) return alert("Lengkapi data");
+
+  const exp=new Date();
+  exp.setDate(exp.getDate()+d);
+  db.ref("userList").push({
+    username:u,
+    storeId:s,
+    expired:exp.toISOString().split("T")[0]
+  });
+
+  document.getElementById("u").value="";
+  document.getElementById("s").value="";
+  document.getElementById("days").value="";
+}
+
+function editUser(id){
+  const cur=USERS[id];
+  const u=prompt("Username:",cur.username);
+  const s=prompt("Store ID:",cur.storeId);
+  const e=prompt("Expired (YYYY-MM-DD):",cur.expired);
+  if(u&&s&&e){
+    db.ref("userList/"+id).update({
+      username:u.toUpperCase(),
+      storeId:s.toUpperCase(),
+      expired:e
+    });
+  }
+}
+
+function delUser(id){
+  if(confirm("Hapus user ini?")) db.ref("userList/"+id).remove();
+}
+
+function logout(){location.reload()}
+</script>
+
+</body>
 </html>
